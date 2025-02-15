@@ -1,5 +1,7 @@
 package com.example;
 
+import java.util.HashMap;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -8,9 +10,19 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class ComputerGUI extends Application {
+    
+    private Simulator sim;
+
+    private void setupSim(Stage stage) {
+        this.sim = new Simulator();    
+    }
+    
     @Override
     public void start(Stage primaryStage) {
+        this.setupSim(primaryStage);
         primaryStage.setTitle("Computer System GUI");
+
+        HashMap<String, TextField> fieldMap = new HashMap<>();
 
         BorderPane root = new BorderPane();
 
@@ -27,7 +39,8 @@ public class ComputerGUI extends Application {
         for (int i = 0; i < 4; i++) {
             TextField textField = new TextField();
             Button button = new Button("Set");
-            grid.add(new Label("GPR " + i + ":"), 0, i);
+            fieldMap.put("GPR" + i, textField);
+            grid.add(new Label("GPR" + i + ":"), 0, i);
             grid.add(textField, 1, i);
             grid.add(button, 2, i);
         }
@@ -36,7 +49,8 @@ public class ComputerGUI extends Application {
         for (int i = 1; i <= 3; i++) {
             TextField textField = new TextField();
             Button button = new Button("Set");
-            grid.add(new Label("IXR " + i + ":"), 0, i + 4);
+            fieldMap.put("IXR" + i, textField);
+            grid.add(new Label("IXR" + i + ":"), 0, i + 4);
             grid.add(textField, 1, i + 4);
             grid.add(button, 2, i + 4);
         }
@@ -46,6 +60,7 @@ public class ComputerGUI extends Application {
         for (int i = 0; i < labels.length; i++) {
             TextField textField = new TextField();
             Button button = new Button("Set");
+            fieldMap.put(labels[i], textField);
             grid.add(new Label(labels[i] + ":"), 3, i);
             grid.add(textField, 4, i);
             grid.add(button, 5, i);
@@ -53,9 +68,12 @@ public class ComputerGUI extends Application {
 
         // Remaining Fields Without Buttons
         String[] remainingLabels = {"IR", "CC", "MFR", "Binary", "Octal", "Program File"};
+
         for (int i = 0; i < remainingLabels.length; i++) {
+            TextField textField = new TextField();
+            fieldMap.put(remainingLabels[i], textField);
             grid.add(new Label(remainingLabels[i] + ":"), 3, i + 3);
-            grid.add(new TextField(), 4, i + 3);
+            grid.add(textField, 4, i + 3);
         }
 
         // Console Input Field on Right Side
@@ -104,7 +122,18 @@ public class ComputerGUI extends Application {
         btnRun.setOnAction(e -> System.out.println("Run button clicked"));
         btnStep.setOnAction(e -> System.out.println("Step button clicked"));
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
-        btnIPL.setOnAction(e -> System.out.println("IPL button clicked"));
+        btnIPL.setOnAction(e -> {
+            String pf = fieldMap.get("Program File").getText();
+            System.out.println("Program File Path: " + pf);
+            this.sim.setProgramFile(pf);
+            boolean successInitialization = this.sim.initializeProgram();
+            if(!successInitialization){
+                debugOutput.setText("Failed to initialize with load file: " + pf);
+            }else{
+                debugOutput.setText("Successfully initialized with load file: " + pf);
+                btnIPL.setStyle("-fx-background-color: green; -fx-text-fill: white;");
+            }
+        });
 
         HBox buttonBox = new HBox(10, btnLoad, btnStore, btnRun, btnStep, btnHalt, btnIPL);
         VBox centerBox = new VBox(10, grid, buttonBox);
