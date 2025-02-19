@@ -6,9 +6,12 @@ import java.util.Scanner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+
 
 public class Simulator {
     
+        //all register store string decimal values for what is in the register
         // General Purpose Registers
         private String GPR0;
         private String GPR1;
@@ -23,11 +26,17 @@ public class Simulator {
         //memory registers, memory address reg and memory buffer register
         private String MAR;
         private String MBR;
+        private String MFR;
 
         //load file location and loadFile array
         private String programFile;
         private List<String> loadFile;
 
+        //stores addresses as the key and values
+        //can access memory by using the address as the key
+        //key: address, octal String 
+        //value: value, decimal int
+        private HashMap<String,Integer> memory;
         // Constructor
         public Simulator() {
             this.GPR0 = "";
@@ -40,10 +49,27 @@ public class Simulator {
             this.PC = "";
             this.MAR = "";
             this.MBR = "";
+            this.MFR = "";
             this.programFile = "";
             this.loadFile = new ArrayList<>();
+            this.memory = new HashMap<>();
         }
-    
+        
+        //retrieves a value from an address in memory using a String decimal address
+        public int getFromMemory(String address){
+            int addr = Integer.parseInt(address);
+            if(address.equals(null) || !memory.containsKey(address)){
+                //TODO: Throw exception for no value at address or incorrect address
+                return -1;
+            }else if(addr < 0 || addr > 2048){
+                //TODO: Throw exception for trying to access memory out of bounds exception
+                return -1;
+            }else{
+                return this.memory.get(address);
+            }
+
+        }
+
         // Method to display information
         public void displayInfo() {
         }
@@ -162,6 +188,14 @@ public class Simulator {
         public void setMBR(String mBR) {
             MBR = mBR;
         }
+        
+        public String getMFR() {
+            return MBR;
+        }
+
+        public void setMFR(String mBR) {
+            MBR = mBR;
+        }
 
         public String getProgramFile() {
             return programFile;
@@ -169,8 +203,5 @@ public class Simulator {
 
         public void setProgramFile(String programFile) {
             this.programFile = programFile;
-        }
-
-        
-       
+        }  
 }
