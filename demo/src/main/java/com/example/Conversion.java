@@ -34,4 +34,14 @@ public class Conversion {
         return binaryNumber;
     }
 
+    //converts an octal string to its decimal int representation
+    public static int convertToDecimal(String octalNum){
+        return Integer.parseInt(octalNum, 8);
+    }
+
+    //converts an octal string to its decimal string representation
+    public static String convertToDecimalString(String octalNum){
+        return Integer.toString(Integer.parseInt(octalNum, 8));
+    }
+
 }
