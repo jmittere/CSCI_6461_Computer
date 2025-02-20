@@ -59,19 +59,14 @@ public class Simulator {
         public int getFromMemory(String address){
             int addr = Integer.parseInt(address);
             if(address.equals(null) || !memory.containsKey(address)){
-                //TODO: Throw exception for no value at address or incorrect address
                 return -1;
-            }else if(addr < 0 || addr > 2048){
+            }else if(addr < 0 || addr > 2047){
                 //TODO: Throw exception for trying to access memory out of bounds exception
                 return -1;
             }else{
                 return this.memory.get(address);
             }
 
-        }
-
-        // Method to display information
-        public void displayInfo() {
         }
 
         //reads each line in the loadfile and puts it into loadFile array
@@ -106,8 +101,6 @@ public class Simulator {
             }
             return res;
         }
-
-
 
         public String getGPR0() {
             return GPR0;
