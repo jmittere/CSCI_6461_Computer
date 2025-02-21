@@ -19,7 +19,7 @@ public class Simulator {
         private String GPR3;
         // Index Registers
         private String IXR1;
-        private String IRX2;
+        private String IXR2;
         private String IXR3;
         //program counter
         private String PC;
@@ -44,7 +44,7 @@ public class Simulator {
             this.GPR2 = "";
             this.GPR3 = "";
             this.IXR1 = "";
-            this.IRX2 = "";
+            this.IXR2 = "";
             this.IXR3 = "";
             this.PC = "";
             this.MAR = "";
@@ -66,6 +66,17 @@ public class Simulator {
             }else{
                 return this.memory.get(address);
             }
+
+        }
+
+        //runs the entire program in the LoadFile when the run button is pressed
+        public void run(){
+            
+        }
+
+        //steps through the LoadFile one line at a time
+        //TODO: Figure out what all needs to be passed into this instruction
+        public void step(String instruction, int gpr, int ixr){
 
         }
 
@@ -142,12 +153,12 @@ public class Simulator {
             IXR1 = iXR1;
         }
 
-        public String getIRX2() {
-            return IRX2;
+        public String getIXR2() {
+            return IXR2;
         }
 
-        public void setIRX2(String iRX2) {
-            IRX2 = iRX2;
+        public void setIXR2(String iXR2) {
+            IXR2 = iXR2;
         }
 
         public String getIXR3() {

@@ -55,12 +55,12 @@ public class ComputerGUI extends Application {
         grid.add(btngpr1, 2, 1);
         TextField gpr2Field = new TextField();
         Button btngpr2 = new Button("Set");
-        grid.add(new Label("GPR1:"), 0, 2);
+        grid.add(new Label("GPR2:"), 0, 2);
         grid.add(gpr2Field, 1, 2);
         grid.add(btngpr2, 2, 2);
         TextField gpr3Field = new TextField();
         Button btngpr3 = new Button("Set");
-        grid.add(new Label("GPR1:"), 0, 3);
+        grid.add(new Label("GPR3:"), 0, 3);
         grid.add(gpr3Field, 1, 3);
         grid.add(btngpr3, 2, 3);
 
@@ -232,8 +232,7 @@ public class ComputerGUI extends Application {
                 debugOutput.setText("GPR1 set with: " + num);
                 }
             }
-        }
-);
+        });
         btngpr2.setOnAction(e -> {
             String num = "";
             if(!gpr2Field.getText().equals("")){ //gpr text box filled in
@@ -267,8 +266,7 @@ public class ComputerGUI extends Application {
                 debugOutput.setText("GPR2 set with: " + num);
                 }
             }
-        }
-);
+        });
         btngpr3.setOnAction(e -> {
             String num = "";
             if(!gpr3Field.getText().equals("")){ //gpr text box filled in
@@ -302,9 +300,147 @@ public class ComputerGUI extends Application {
                 debugOutput.setText("GPR3 set with: " + num);
                 }
             }
-        }
-);
+        });
 
+        btnixr1.setOnAction(e -> {
+            String num = "";
+            if(!ixr1Field.getText().equals("")){ //gpr text box filled in
+                int temp = Integer.parseInt(ixr1Field.getText());
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    this.sim.setIXR1(ixr1Field.getText());
+                    debugOutput.setText("IXR1 set with: " + ixr1Field.getText());
+                }
+            }else if(!fieldMap.get("Octal").getText().equals("")){ 
+                int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
+                    this.sim.setIXR1(num); //converts value in Octal text box to a decimal string
+                    ixr1Field.setText(num);
+                    fieldMap.get("Octal").setText("");
+                    debugOutput.setText("IXR1 set with: " + num);
+                }
+            }else if(!fieldMap.get("Binary").getText().equals("")){
+                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                this.sim.setIXR1(num); //converts value in Binary text box to an octal string then decimal string
+                ixr1Field.setText(num);
+                fieldMap.get("Binary").setText("");
+                debugOutput.setText("GPR3 set with: " + num);
+                }
+            }
+        });
+
+        btnixr2.setOnAction(e -> {
+            String num = "";
+            if(!ixr2Field.getText().equals("")){ //gpr text box filled in
+                int temp = Integer.parseInt(ixr2Field.getText());
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    this.sim.setIXR2(ixr2Field.getText());
+                    debugOutput.setText("IXR2 set with: " + ixr2Field.getText());
+                }
+            }else if(!fieldMap.get("Octal").getText().equals("")){ 
+                int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
+                    this.sim.setIXR2(num); //converts value in Octal text box to a decimal string
+                    ixr2Field.setText(num);
+                    fieldMap.get("Octal").setText("");
+                    debugOutput.setText("IXR2 set with: " + num);
+                }
+            }else if(!fieldMap.get("Binary").getText().equals("")){
+                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                this.sim.setIXR2(num); //converts value in Binary text box to an octal string then decimal string
+                ixr2Field.setText(num);
+                fieldMap.get("Binary").setText("");
+                debugOutput.setText("IXR2 set with: " + num);
+                }
+            }
+        });
+
+        btnixr3.setOnAction(e -> {
+            String num = "";
+            if(!ixr3Field.getText().equals("")){ //gpr text box filled in
+                int temp = Integer.parseInt(ixr3Field.getText());
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    this.sim.setIXR3(ixr3Field.getText());
+                    debugOutput.setText("IXR3 set with: " + ixr3Field.getText());
+                }
+            }else if(!fieldMap.get("Octal").getText().equals("")){ 
+                int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
+                    this.sim.setIXR3(num); //converts value in Octal text box to a decimal string
+                    ixr3Field.setText(num);
+                    fieldMap.get("Octal").setText("");
+                    debugOutput.setText("IXR3 set with: " + num);
+                }
+            }else if(!fieldMap.get("Binary").getText().equals("")){
+                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                this.sim.setIXR3(num); //converts value in Binary text box to an octal string then decimal string
+                ixr3Field.setText(num);
+                fieldMap.get("Binary").setText("");
+                debugOutput.setText("IXR3 set with: " + num);
+                }
+            }
+        });
+
+        btnPC.setOnAction(e -> {
+            String num = "";
+            if(!PCField.getText().equals("")){ //gpr text box filled in
+                int temp = Integer.parseInt(PCField.getText());
+                if(temp < 0 || temp > 4095){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    this.sim.setPC(PCField.getText());
+                    debugOutput.setText("PC set with: " + PCField.getText());
+                }
+            }else if(!fieldMap.get("Octal").getText().equals("")){ 
+                int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
+                if(temp < 0 || temp > 4095){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
+                    this.sim.setPC(num); //converts value in Octal text box to a decimal string
+                    PCField.setText(num);
+                    fieldMap.get("Octal").setText("");
+                    debugOutput.setText("PC set with: " + num);
+                }
+            }else if(!fieldMap.get("Binary").getText().equals("")){
+                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
+                if(temp < 0 || temp > 4095){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                this.sim.setPC(num); //converts value in Binary text box to an octal string then decimal string
+                PCField.setText(num);
+                fieldMap.get("Binary").setText("");
+                debugOutput.setText("PC set with: " + num);
+                }
+            }
+        });
 
         HBox buttonBox = new HBox(10, btnLoad, btnStore, btnRun, btnStep, btnHalt, btnIPL);
         VBox centerBox = new VBox(10, grid, buttonBox);
