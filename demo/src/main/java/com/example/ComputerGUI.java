@@ -5,8 +5,14 @@ import java.util.HashMap;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class ComputerGUI extends Application {
@@ -193,9 +199,111 @@ public class ComputerGUI extends Application {
                 }
             }
         });
-        btngpr1.setOnAction(e -> System.out.println("GPR1"));
-        btngpr2.setOnAction(e -> System.out.println("GPR2"));
-        btngpr3.setOnAction(e -> System.out.println("GPR3"));
+        btngpr1.setOnAction(e -> {
+            String num = "";
+            if(!gpr1Field.getText().equals("")){ //gpr text box filled in
+                int temp = Integer.parseInt(gpr1Field.getText());
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    this.sim.setGPR1(gpr1Field.getText());
+                    debugOutput.setText("GPR1 set with: " + gpr1Field.getText());
+                }
+            }else if(!fieldMap.get("Octal").getText().equals("")){ 
+                int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
+                    this.sim.setGPR1(num); //converts value in Octal text box to a decimal string
+                    gpr1Field.setText(num);
+                    fieldMap.get("Octal").setText("");
+                    debugOutput.setText("GPR1 set with: " + num);
+                }
+            }else if(!fieldMap.get("Binary").getText().equals("")){
+                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                this.sim.setGPR1(num); //converts value in Binary text box to an octal string then decimal string
+                gpr1Field.setText(num);
+                fieldMap.get("Binary").setText("");
+                debugOutput.setText("GPR1 set with: " + num);
+                }
+            }
+        }
+);
+        btngpr2.setOnAction(e -> {
+            String num = "";
+            if(!gpr2Field.getText().equals("")){ //gpr text box filled in
+                int temp = Integer.parseInt(gpr2Field.getText());
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    this.sim.setGPR2(gpr2Field.getText());
+                    debugOutput.setText("GPR2 set with: " + gpr2Field.getText());
+                }
+            }else if(!fieldMap.get("Octal").getText().equals("")){ 
+                int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
+                    this.sim.setGPR2(num); //converts value in Octal text box to a decimal string
+                    gpr2Field.setText(num);
+                    fieldMap.get("Octal").setText("");
+                    debugOutput.setText("GPR2 set with: " + num);
+                }
+            }else if(!fieldMap.get("Binary").getText().equals("")){
+                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                this.sim.setGPR2(num); //converts value in Binary text box to an octal string then decimal string
+                gpr2Field.setText(num);
+                fieldMap.get("Binary").setText("");
+                debugOutput.setText("GPR2 set with: " + num);
+                }
+            }
+        }
+);
+        btngpr3.setOnAction(e -> {
+            String num = "";
+            if(!gpr3Field.getText().equals("")){ //gpr text box filled in
+                int temp = Integer.parseInt(gpr3Field.getText());
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    this.sim.setGPR3(gpr3Field.getText());
+                    debugOutput.setText("GPR3 set with: " + gpr3Field.getText());
+                }
+            }else if(!fieldMap.get("Octal").getText().equals("")){ 
+                int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                    num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
+                    this.sim.setGPR3(num); //converts value in Octal text box to a decimal string
+                    gpr3Field.setText(num);
+                    fieldMap.get("Octal").setText("");
+                    debugOutput.setText("GPR3 set with: " + num);
+                }
+            }else if(!fieldMap.get("Binary").getText().equals("")){
+                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
+                if(temp < 0 || temp > 65535){
+                    debugOutput.setText("Value is not valid.");
+                }else{
+                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                this.sim.setGPR3(num); //converts value in Binary text box to an octal string then decimal string
+                gpr3Field.setText(num);
+                fieldMap.get("Binary").setText("");
+                debugOutput.setText("GPR3 set with: " + num);
+                }
+            }
+        }
+);
 
 
         HBox buttonBox = new HBox(10, btnLoad, btnStore, btnRun, btnStep, btnHalt, btnIPL);
