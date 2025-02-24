@@ -3,10 +3,16 @@ package com.example;
 //class of helper functions to convert Decimal, Octal, Binary numbers
 public class Conversion {
 
-    //converts an String num in decimal to a binary string with a specified number of characters len
+    //converts a String num in decimal to a binary string with a specified number of characters len
     public static String convertToBinaryString(String num, int len){
         //ensures that the number of characters is equal to len
         return String.format("%" + len +"s", Integer.toBinaryString(Integer.parseInt(num))).replace(' ', '0');
+    }
+
+    //converts an Integer num in decimal to a binary string with a specified number of characters len
+    public static String convertToBinaryString(int num, int len){
+        //ensures that the number of characters is equal to len
+        return String.format("%" + len +"s", Integer.toBinaryString(num)).replace(' ', '0');
     }
 
     
