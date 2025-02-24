@@ -158,7 +158,7 @@ public class ComputerGUI extends Application {
         });
         btnStep.setOnAction(e -> {
             System.out.println("Step button clicked");
-            System.out.println("Action");
+            //TODO: get values of each register, PC, MBR, MAR, here from backend to display updates after the step 
             boolean res = this.sim.step();
             System.out.println(res);
         });

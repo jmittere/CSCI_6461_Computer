@@ -266,38 +266,130 @@ public class Simulator {
             return res;
         }
 
+        //Load gpr register with value from memory
         private boolean LDR(int gpr, int ixr, int indirect, int address){
-
-
+            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            switch (gpr) {
+                case 0: //load into gpr0
+                    this.setGPR0(this.getFromMemory(add));
+                    System.out.println("GPR0 set with: " + this.getFromMemory(add));
+                    break;
+                case 1: //load into gpr1
+                    this.setGPR1(this.getFromMemory(add));
+                    System.out.println("GPR1 set with: " + this.getFromMemory(add));
+                    break;
+                case 2: //load into gpr2
+                    this.setGPR2(this.getFromMemory(add));
+                    System.out.println("GPR2 set with: " + this.getFromMemory(add));
+                    break;
+                case 3: //load into gpr3
+                    this.setGPR3(this.getFromMemory(add));
+                    System.out.println("GPR3 set with: " + this.getFromMemory(add));
+                    break;
+                default:
+                    System.out.println("Invalid command.");
+            }
             return true;
         }
 
-        
+        //Store value in gpr to memory
         private boolean STR(int gpr, int ixr, int indirect, int address){
-            
-
+            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            switch (gpr) {
+                case 0: //store gpr0 to memory
+                    this.memory.put(add, this.GPR0);
+                    System.out.println("GPR0: " + this.GPR0 + " stored at: " + add);
+                    break;
+                case 1: //store gpr1 to memory
+                    this.memory.put(add, this.GPR1);
+                    System.out.println("GPR1: " + this.GPR1 + " stored at: " + add);
+                    break;
+                case 2: //store gpr2 to memory
+                    this.memory.put(add, this.GPR2);
+                    System.out.println("GPR2: " + this.GPR2 + " stored at: " + add);
+                    break;
+                case 3: //store gpr3 to memory
+                    this.memory.put(add, this.GPR3);
+                    System.out.println("GPR3: " + this.GPR3 + " stored at: " + add);
+                    break;
+                default:
+                    System.out.println("Invalid command.");
+            }
             return true;
         }
 
+        //Load gpr register with address
         private boolean LDA(int gpr, int ixr, int indirect, int address){
-            
-
+            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            switch (gpr) {
+                case 0: //load into gpr0
+                    this.setGPR0(add);
+                    System.out.println("GPR0 set with: " + add);
+                    break;
+                case 1: //load into gpr1
+                    this.setGPR1(add);
+                    System.out.println("GPR1 set with: " + add);
+                    break;
+                case 2: //load into gpr2
+                    this.setGPR2(add);
+                    System.out.println("GPR2 set with: " + add);
+                    break;
+                case 3: //load into gpr3
+                    this.setGPR3(add);
+                    System.out.println("GPR3 set with: " + add);
+                    break;
+                default:
+                    System.out.println("Invalid command.");
+            }
             return true;
         }
 
+        //Load Index register from memory
         private boolean LDX(int gpr, int ixr, int indirect, int address){
-            
-
+            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            switch (ixr) {
+                case 1: //load into ixr1
+                    this.setIXR1(this.getFromMemory(add));
+                    System.out.println("IXR1 set with: " + this.getFromMemory(add));
+                    break;
+                case 2: //load into ixr2
+                    this.setIXR2(this.getFromMemory(add));
+                    System.out.println("IXR2 set with: " + this.getFromMemory(add));
+                    break;
+                case 3: //load into ixr3
+                    this.setIXR3(this.getFromMemory(add));
+                    System.out.println("IXR3 set with: " + this.getFromMemory(add));
+                    break;
+                default:
+                    System.out.println("Invalid command.");
+            }
             return true;
         }
 
+        //Store Index register to memory
         private boolean STX(int gpr, int ixr, int indirect, int address){
             
 
             return true;
         }
 
+        private int computeEffectiveAddress(int ixr, int indirect, int address){
+            int ea = -1;
+            if(ixr == 0){
+                ea = address;
+            }else if(ixr==1){
+                ea = this.IXR1 + address;
+            }else if(ixr==2){
+                ea = this.IXR2 + address;
+            }else if(ixr==3){
+                ea = this.IXR3 + address;
+            }
 
+            if(indirect == 1){
+                ea = getFromMemory(ea);
+            }
+            return ea;
+        }
     
         public int getGPR0() {
             return GPR0;
