@@ -37,6 +37,12 @@ public class Simulator {
         //key: address, decimal int 
         //value: instruction, decimal int
         private HashMap<Integer,Integer> memory;
+
+        //hashmap storing all opCodes
+        //key: string binary representation of an opCode
+        //value: string representation of opCode
+        private HashMap<String, String> opCodes;
+
         // Constructor
         public Simulator() {
             this.GPR0 = -1;
@@ -53,7 +59,49 @@ public class Simulator {
             this.programFile = "";
             this.loadFile = new ArrayList<>();
             this.memory = new HashMap<>();
+            this.opCodes = new HashMap<>();
+            this.initializeOpcodes();
         }
+
+        //Initializing the binary value with corresponding opCode
+        private void initializeOpcodes(){
+            opCodes.put("000001", "LDR");
+            opCodes.put("011000", "TRAP");
+            opCodes.put("000010", "STR");
+            opCodes.put("000011", "LDA");
+            opCodes.put("100001", "LDX");
+            opCodes.put("100010", "STX");
+            opCodes.put("001000", "JZ");
+            opCodes.put("001001", "JNE");
+            opCodes.put("001010", "JCC");
+            opCodes.put("001011", "JMA");
+            opCodes.put("001100", "JSR");
+            opCodes.put("001101", "RFS");
+            opCodes.put("001110", "SOB");
+            opCodes.put("001111", "JGE");
+            opCodes.put("000100", "AMR");
+            opCodes.put("000101", "SMR");
+            opCodes.put("000110", "AIR");
+            opCodes.put("000111", "SIR");
+            opCodes.put("111000", "MLT");
+            opCodes.put("111001", "DVD");
+            opCodes.put("111010", "TRR");
+            opCodes.put("111011", "AND");
+            opCodes.put("111100", "ORR");
+            opCodes.put("111101", "NOT");
+            opCodes.put("011001", "SRC");
+            opCodes.put("011010", "RRC");
+            opCodes.put("110001", "IN");
+            opCodes.put("110010", "OUT");
+            opCodes.put("110011", "CHK");
+            opCodes.put("011011", "FADD");
+            opCodes.put("011100", "FSUB");
+            opCodes.put("011101", "VADD");
+            opCodes.put("011110", "VSUB");
+            opCodes.put("011111", "CNVRT");
+            opCodes.put("101000", "LDFR");
+            opCodes.put("101001", "STFR");
+        } 
         
         //retrieves a value from an address in memory using a String decimal address
         public int getFromMemory(int address){
@@ -65,7 +113,6 @@ public class Simulator {
             }else{
                 return this.memory.get(address);
             }
-
         }
 
         //runs the entire program in the LoadFile when the run button is pressed
@@ -73,10 +120,93 @@ public class Simulator {
             
         }
 
-        //steps through the LoadFile one line at a time
-        //TODO: Figure out what all needs to be passed into this instruction
-        public void step(){
+        //steps through memory depending on where PC is set
+        //should error if pc is not set
+        //should also increment pc after each instruction
+        public boolean step(){
+            if(this.PC == -1){
+                System.out.println("Cannot step without setting PC...");
+                return false;
+            }
+            
+            //get value at address of PC from memory
+            int instr = this.getFromMemory(this.PC);
+            if(instr == -1){
+                System.out.println("No instruction at: " + this.PC);
+                return false;
+            }
 
+            String binaryInstruction = Conversion.convertToBinaryString(instr, 16); //gets the binary equivalent of the instruction stored at memory location of PC
+            String opCodeBinaryString = binaryInstruction.substring(0, 6);
+            String opCode = this.opCodes.get(opCodeBinaryString);
+            if(opCode == null){
+                System.out.println("Opcode null");
+                this.PC = this.getAddressOfNextInstruction();
+                System.out.println("Next Instruction: " + this.PC);
+                return false;
+            }
+            int[] contents = new int[4];
+            boolean res = false;
+            switch (opCode) {
+                case "LDR":
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    res = this.LDR(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("LDR");
+                    break;
+                case "STR":
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    res = this.STR(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("STR");
+                    break;
+                case "LDA":
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    res = this.LDA(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("LDA");
+                    break;
+                case "LDX":
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    res = this.LDX(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("LDX");
+                    break;
+                case "STX":
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    res = this.STX(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("STX");
+                    break;
+                default:
+                    System.out.println("Invalid command.");
+            }
+
+            this.PC = this.getAddressOfNextInstruction();
+            System.out.println("Next Instruction: " + this.PC);
+            return true;
+        }
+
+        //using the PC, gets the address of the next instruction in the loadFile
+        public int getAddressOfNextInstruction(){
+            for (int i = 0; i < this.loadFile.size(); i++) {
+                String[] words = this.loadFile.get(i).split("\\s+"); //splits by any number of spaces
+                int address = Conversion.convertToDecimal(words[0]); //converts octal address in loadFile to decimal 
+                if(this.PC == address && i != this.loadFile.size()-1){ //if PC equals address and it isn't last line in loadfile
+                    String[] nextWords = this.loadFile.get(i+1).split("\\s+"); //splits by any number of spaces
+                    return Conversion.convertToDecimal(nextWords[0]); //returns next address in loadFile
+                }
+            }
+            //end of LoadFile so PC + 1
+            return this.PC+1;
+        }
+
+        //returns a int array where each portion of a loadStore instruction is parsed out
+        //returned contents are in decimal
+        //[0] == gpr, [1] == ix, [2] == indirect, [3] == address
+        public int[] parseLoadStoreInst(String binaryString){
+            assert binaryString.length() == 16: "Instructions must be 16 bits";
+            int[] contents = new int[4]; // Creates an array of size 4
+            contents[0] = Integer.parseInt(binaryString.substring(6,8), 2); //gpr
+            contents[1] = Integer.parseInt(binaryString.substring(8,10), 2); //ixr
+            contents[2] = Integer.parseInt(binaryString.substring(10,11), 2); //indirect bit
+            contents[3] = Integer.parseInt(binaryString.substring(11,16), 2); //address
+            return contents;
         }
 
         //reads each line in the loadfile and puts it into loadFile array
@@ -136,6 +266,39 @@ public class Simulator {
             return res;
         }
 
+        private boolean LDR(int gpr, int ixr, int indirect, int address){
+
+
+            return true;
+        }
+
+        
+        private boolean STR(int gpr, int ixr, int indirect, int address){
+            
+
+            return true;
+        }
+
+        private boolean LDA(int gpr, int ixr, int indirect, int address){
+            
+
+            return true;
+        }
+
+        private boolean LDX(int gpr, int ixr, int indirect, int address){
+            
+
+            return true;
+        }
+
+        private boolean STX(int gpr, int ixr, int indirect, int address){
+            
+
+            return true;
+        }
+
+
+    
         public int getGPR0() {
             return GPR0;
         }
@@ -217,11 +380,11 @@ public class Simulator {
         }
         
         public int getMFR() {
-            return MBR;
+            return this.MFR;
         }
 
-        public void setMFR(int mBR) {
-            MBR = mBR;
+        public void setMFR(int MFR) {
+            this.MFR = MFR;
         }
 
         public String getProgramFile() {

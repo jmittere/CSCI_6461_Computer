@@ -35,7 +35,11 @@ public class ComputerGUI extends Application {
 
         Label titleLabel = new Label("Computer System GUI");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label bottomLabel = new Label("To set a register, you must delete the existing value in the text box.");
+        bottomLabel.setStyle("-fx-font-size: 16px;");
+
         root.setTop(titleLabel);
+        root.setBottom(bottomLabel);
 
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(10));
@@ -148,8 +152,16 @@ public class ComputerGUI extends Application {
 
         btnLoad.setOnAction(e -> System.out.println("Load button clicked"));
         btnStore.setOnAction(e -> System.out.println("Store button clicked"));
-        btnRun.setOnAction(e -> System.out.println("Run button clicked"));
-        btnStep.setOnAction(e -> System.out.println("Step button clicked"));
+        btnRun.setOnAction(e -> {
+            System.out.println("Run button clicked");
+            this.sim.run();
+        });
+        btnStep.setOnAction(e -> {
+            System.out.println("Step button clicked");
+            System.out.println("Action");
+            boolean res = this.sim.step();
+            System.out.println(res);
+        });
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
         btnIPL.setOnAction(e -> {
             String pf = fieldMap.get("Program File").getText();
