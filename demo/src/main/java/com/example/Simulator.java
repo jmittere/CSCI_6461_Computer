@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
-
 public class Simulator {
     
         //all register store string decimal values for what is in the register
@@ -28,6 +27,10 @@ public class Simulator {
         private int MBR;
         private int MFR;
 
+        //debug output to be passed to the frontend debugOutput text area 
+        //contains error code if failed instruction or symbolic instruction
+        private String debugOutput;
+
         //load file location and loadFile array
         private String programFile;
         private List<String> loadFile;
@@ -43,6 +46,10 @@ public class Simulator {
         //value: string representation of opCode
         private HashMap<String, String> opCodes;
 
+        //represents the values of each register, PC, and output message for debugging
+        //Important: key is the register, value is the contents of the register in STRING form
+        public HashMap<String, String> registers;
+
         // Constructor
         public Simulator() {
             this.GPR0 = -1;
@@ -56,12 +63,32 @@ public class Simulator {
             this.MAR = -1;
             this.MBR = -1;
             this.MFR = -1;
+            this.debugOutput = "";
             this.programFile = "";
             this.loadFile = new ArrayList<>();
             this.memory = new HashMap<>();
             this.opCodes = new HashMap<>();
+            this.registers = new HashMap<>();
             this.initializeOpcodes();
         }
+
+        //updates hashmap that has contents of each register
+        //must run this function before returning values to the frontend
+        private void updateRegisters(){
+            this.registers.put("GPR0", String.valueOf(this.GPR0));
+            this.registers.put("GPR1", String.valueOf(this.GPR1));
+            this.registers.put("GPR2", String.valueOf(this.GPR2));
+            this.registers.put("GPR3", String.valueOf(this.GPR3));
+            this.registers.put("IXR1", String.valueOf(this.IXR1));
+            this.registers.put("IXR2", String.valueOf(this.IXR2));
+            this.registers.put("IXR3", String.valueOf(this.IXR3));
+            this.registers.put("PC", String.valueOf(this.PC));
+            this.registers.put("MAR", String.valueOf(this.MAR));
+            this.registers.put("MBR", String.valueOf(this.MBR));
+            this.registers.put("MFR", String.valueOf(this.MFR));
+            this.registers.put("debugOutput", this.debugOutput);
+        }
+
 
         //Initializing the binary value with corresponding opCode
         private void initializeOpcodes(){
@@ -123,17 +150,26 @@ public class Simulator {
         //steps through memory depending on where PC is set
         //should error if pc is not set
         //should also increment pc after each instruction
-        public boolean step(){
+        public HashMap<String, String> step(){
             if(this.PC == -1){
                 System.out.println("Cannot step without setting PC...");
-                return false;
+                this.debugOutput = "ERROR: Cannot step without setting PC";
+                this.updateRegisters();
+                return this.registers;
+            } else if(this.PC > 4095){
+                System.out.println("PC: Memory out of bounds");
+                this.debugOutput = "ERROR: PC Memory out of bounds";
+                this.updateRegisters();
+                return this.registers;
             }
             
             //get value at address of PC from memory
             int instr = this.getFromMemory(this.PC);
             if(instr == -1){
                 System.out.println("No instruction at: " + this.PC);
-                return false;
+                this.debugOutput = "ERROR: No instruction at " + this.PC;
+                this.updateRegisters();
+                return this.registers;
             }
 
             String binaryInstruction = Conversion.convertToBinaryString(instr, 16); //gets the binary equivalent of the instruction stored at memory location of PC
@@ -142,44 +178,49 @@ public class Simulator {
             if(opCode == null){
                 System.out.println("Opcode null");
                 this.PC = this.getAddressOfNextInstruction();
+                this.debugOutput = "ERROR: OpCode null";
+                this.updateRegisters();
                 System.out.println("Next Instruction: " + this.PC);
-                return false;
+                return this.registers;
             }
             int[] contents = new int[4];
-            boolean res = false;
             switch (opCode) {
                 case "LDR":
                     contents = this.parseLoadStoreInst(binaryInstruction);
-                    res = this.LDR(contents[0], contents[1], contents[2], contents[3]);
+                    this.debugOutput = this.LDR(contents[0], contents[1], contents[2], contents[3]);
                     System.out.println("LDR");
                     break;
                 case "STR":
                     contents = this.parseLoadStoreInst(binaryInstruction);
-                    res = this.STR(contents[0], contents[1], contents[2], contents[3]);
+                    this.debugOutput = this.STR(contents[0], contents[1], contents[2], contents[3]);
                     System.out.println("STR");
                     break;
                 case "LDA":
                     contents = this.parseLoadStoreInst(binaryInstruction);
-                    res = this.LDA(contents[0], contents[1], contents[2], contents[3]);
+                    this.debugOutput = this.LDA(contents[0], contents[1], contents[2], contents[3]);
                     System.out.println("LDA");
                     break;
                 case "LDX":
                     contents = this.parseLoadStoreInst(binaryInstruction);
-                    res = this.LDX(contents[0], contents[1], contents[2], contents[3]);
+                    this.debugOutput = this.LDX(contents[0], contents[1], contents[2], contents[3]);
                     System.out.println("LDX");
                     break;
                 case "STX":
                     contents = this.parseLoadStoreInst(binaryInstruction);
-                    res = this.STX(contents[0], contents[1], contents[2], contents[3]);
+                    this.debugOutput = this.STX(contents[0], contents[1], contents[2], contents[3]);
                     System.out.println("STX");
                     break;
                 default:
-                    System.out.println("Invalid command.");
+                    this.debugOutput = "ERROR: Invalid Instruction";
+                    System.out.println("Invalid Command.");
             }
 
             this.PC = this.getAddressOfNextInstruction();
-            System.out.println("Next Instruction: " + this.PC);
-            return true;
+            this.updateMemoryRegisters();
+            System.out.println("\nNext Instruction: " + this.PC);
+            this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+            this.updateRegisters();
+            return this.registers;
         }
 
         //using the PC, gets the address of the next instruction in the loadFile
@@ -243,6 +284,10 @@ public class Simulator {
                 }
 
                 String address = words[0];
+                if(Conversion.convertToDecimal(address) > 2047){
+                    System.out.println("ERROR: Cannot store in memory over 2047");
+                    return false;
+                }
                 String instruction = words[1];
                 this.memory.put(Conversion.convertToDecimal(address), Conversion.convertToDecimal(instruction));
             }
@@ -252,6 +297,17 @@ public class Simulator {
 
         private void printMemory(){
             this.memory.forEach((key, value) -> System.out.println(key + " -> " + value));
+        }
+
+        private boolean storeInMemory(int address, int value){
+            if(address < 0 || address > 2047){
+                return false;
+            }else if(value < 0 || value > 65535){
+                return false;
+            }else{
+                this.memory.put(address, value);
+                return true;
+            }
         }
 
         //initalizes program with program File specified 
@@ -267,7 +323,7 @@ public class Simulator {
         }
 
         //Load gpr register with value from memory
-        private boolean LDR(int gpr, int ixr, int indirect, int address){
+        private String LDR(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address);
             switch (gpr) {
                 case 0: //load into gpr0
@@ -289,11 +345,11 @@ public class Simulator {
                 default:
                     System.out.println("Invalid command.");
             }
-            return true;
+            return null;
         }
 
         //Store value in gpr to memory
-        private boolean STR(int gpr, int ixr, int indirect, int address){
+        private String STR(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address);
             switch (gpr) {
                 case 0: //store gpr0 to memory
@@ -315,11 +371,11 @@ public class Simulator {
                 default:
                     System.out.println("Invalid command.");
             }
-            return true;
+            return null;
         }
 
         //Load gpr register with address
-        private boolean LDA(int gpr, int ixr, int indirect, int address){
+        private String LDA(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address);
             switch (gpr) {
                 case 0: //load into gpr0
@@ -341,11 +397,11 @@ public class Simulator {
                 default:
                     System.out.println("Invalid command.");
             }
-            return true;
+            return null;
         }
 
         //Load Index register from memory
-        private boolean LDX(int gpr, int ixr, int indirect, int address){
+        private String LDX(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address);
             switch (ixr) {
                 case 1: //load into ixr1
@@ -363,14 +419,30 @@ public class Simulator {
                 default:
                     System.out.println("Invalid command.");
             }
-            return true;
+            return null;
         }
 
         //Store Index register to memory
-        private boolean STX(int gpr, int ixr, int indirect, int address){
-            
+        private String STX(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            switch (ixr) {
+                case 1: //store ixr1 to memory
+                    this.memory.put(add, this.IXR1);
+                    System.out.println("IXR1: " + this.IXR1 + " stored at: " + add);
+                    break;
+                case 2: //store ixr2 to memory
+                    this.memory.put(add, this.IXR2);
+                    System.out.println("IXR2: " + this.IXR2 + " stored at: " + add);
+                    break;
+                case 3: //store ixr3 to memory
+                    this.memory.put(add, this.IXR3);
+                    System.out.println("IXR3: " + this.IXR3 + " stored at: " + add);
+                    break;
+                default:
+                    System.out.println("Invalid command.");
+            }
 
-            return true;
+            return "";
         }
 
         private int computeEffectiveAddress(int ixr, int indirect, int address){
@@ -389,6 +461,14 @@ public class Simulator {
                 ea = getFromMemory(ea);
             }
             return ea;
+        }
+
+        //updates MAR, MBR when the PC changes
+        private void updateMemoryRegisters(){
+            if(this.PC!=-1){
+                this.MAR = this.PC;
+                this.MBR = this.getFromMemory(this.MAR);
+            }
         }
     
         public int getGPR0() {
