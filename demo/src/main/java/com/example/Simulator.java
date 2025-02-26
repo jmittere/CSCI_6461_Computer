@@ -75,23 +75,68 @@ public class Simulator {
         //updates hashmap that has contents of each register
         //must run this function before returning values to the frontend
         private void updateRegisters(){
-            this.registers.put("GPR0", String.valueOf(this.GPR0));
-            this.registers.put("GPR1", String.valueOf(this.GPR1));
-            this.registers.put("GPR2", String.valueOf(this.GPR2));
-            this.registers.put("GPR3", String.valueOf(this.GPR3));
-            this.registers.put("IXR1", String.valueOf(this.IXR1));
-            this.registers.put("IXR2", String.valueOf(this.IXR2));
-            this.registers.put("IXR3", String.valueOf(this.IXR3));
-            this.registers.put("PC", String.valueOf(this.PC));
-            this.registers.put("MAR", String.valueOf(this.MAR));
-            this.registers.put("MBR", String.valueOf(this.MBR));
-            this.registers.put("MFR", String.valueOf(this.MFR));
+            if(this.GPR0 == -1){
+                this.registers.put("GPR0", "");
+            }else{
+                this.registers.put("GPR0", String.valueOf(this.GPR0));
+            }
+            if(this.GPR1 == -1){
+                this.registers.put("GPR1", "");
+            }else{
+                this.registers.put("GPR1", String.valueOf(this.GPR1));
+            }
+            if(this.GPR2 == -1){
+                this.registers.put("GPR2", "");
+            }else{
+                this.registers.put("GPR2", String.valueOf(this.GPR2));
+            }
+            if(this.GPR3 == -1){
+                this.registers.put("GPR3", "");
+            }else{
+                this.registers.put("GPR3", String.valueOf(this.GPR3));
+            }
+            if(this.IXR1 == -1){
+                this.registers.put("IXR1", "");
+            }else{
+                this.registers.put("IXR1", String.valueOf(this.IXR1));
+            }
+            if(this.IXR2 == -1){
+                this.registers.put("IXR2", "");
+            }else{
+                this.registers.put("IXR2", String.valueOf(this.IXR2));
+            }
+            if(this.IXR3 == -1){
+                this.registers.put("IXR3", "");
+            }else{
+                this.registers.put("IXR3", String.valueOf(this.IXR3));
+            }
+            if(this.PC == -1){
+                this.registers.put("PC", "");
+            }else{
+                this.registers.put("PC", String.valueOf(this.PC));
+            }
+            if(this.MAR == -1){
+                this.registers.put("MAR", "");
+            }else{
+                this.registers.put("MAR", String.valueOf(this.MAR));
+            }
+            if(this.MBR == -1){
+                this.registers.put("MBR", "");
+            }else{
+                this.registers.put("MBR", String.valueOf(this.MBR));
+            }
+            if(this.MFR == -1){
+                this.registers.put("MFR", "");
+            }else{
+                this.registers.put("MFR", String.valueOf(this.MFR));
+            }
             this.registers.put("debugOutput", this.debugOutput);
         }
 
 
         //Initializing the binary value with corresponding opCode
         private void initializeOpcodes(){
+            opCodes.put("000000", "HLT");
             opCodes.put("000001", "LDR");
             opCodes.put("011000", "TRAP");
             opCodes.put("000010", "STR");
@@ -143,8 +188,24 @@ public class Simulator {
         }
 
         //runs the entire program in the LoadFile when the run button is pressed
-        public void run(){
-            
+        public HashMap<String, String> run(){
+            if(this.programFile.equals("")){
+                this.debugOutput = "No Program File to Run";
+                this.updateRegisters();
+                return this.registers;
+            }
+    
+            for (int i = 0; i < this.loadFile.size(); i++) { //runs through each line of the load file and steps for each line
+                //System.out.println(i);
+                this.step();
+                /*if(this.debugOutput.contains("ERROR: Cannot step without setting PC")){
+                    break;
+                } */
+
+            }
+            this.updateMemoryRegisters();
+            this.updateRegisters();
+            return this.registers;
         }
 
         //steps through memory depending on where PC is set

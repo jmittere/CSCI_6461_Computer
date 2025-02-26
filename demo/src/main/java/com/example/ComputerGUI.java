@@ -222,18 +222,42 @@ public class ComputerGUI extends Application {
         });
 
         btnRun.setOnAction(e -> {
-            System.out.println("Run button clicked");
-            this.sim.run();
+            HashMap<String, String> registerContents = this.sim.run(); //register contents returns a hashmap of all register contents after run()
+            gpr0Field.setText(registerContents.get("GPR0"));
+            gpr1Field.setText(registerContents.get("GPR1"));
+            gpr2Field.setText(registerContents.get("GPR2"));
+            gpr3Field.setText(registerContents.get("GPR3"));
+            ixr1Field.setText(registerContents.get("IXR1"));
+            ixr2Field.setText(registerContents.get("IXR2"));
+            ixr3Field.setText(registerContents.get("IXR3"));
+            PCField.setText(registerContents.get("PC"));
+            MARField.setText(registerContents.get("MAR"));
+            MBRField.setText(registerContents.get("MBR"));
+            fieldMap.get("MFR").setText(registerContents.get("MFR"));
+            debugOutput.setText(registerContents.get("debugOutput"));
         });
         btnStep.setOnAction(e -> {
-            System.out.println("Step button clicked");
             HashMap<String, String> registerContents = this.sim.step(); //register contents returns a hashmap of all register contents after step()
-            
+            gpr0Field.setText(registerContents.get("GPR0"));
+            gpr1Field.setText(registerContents.get("GPR1"));
+            gpr2Field.setText(registerContents.get("GPR2"));
+            gpr3Field.setText(registerContents.get("GPR3"));
+            ixr1Field.setText(registerContents.get("IXR1"));
+            ixr2Field.setText(registerContents.get("IXR2"));
+            ixr3Field.setText(registerContents.get("IXR3"));
+            PCField.setText(registerContents.get("PC"));
+            MARField.setText(registerContents.get("MAR"));
+            MBRField.setText(registerContents.get("MBR"));
+            fieldMap.get("MFR").setText(registerContents.get("MFR"));
+            debugOutput.setText(registerContents.get("debugOutput"));
         });
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
         btnIPL.setOnAction(e -> {
             String pf = fieldMap.get("Program File").getText();
             System.out.println("Program File Path: " + pf);
+            if(pf.equals("")){ //use hardcoded preloaded file
+                pf = "preload.txt";
+            }
             this.sim.setProgramFile(pf);
             boolean successInitialization = this.sim.initializeProgram();
             if(!successInitialization){
