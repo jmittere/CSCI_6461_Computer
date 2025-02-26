@@ -521,6 +521,7 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setPC(Integer.parseInt(PCField.getText()));
+                    this.sim.setMAR(Integer.parseInt(PCField.getText()));
                     MARField.setText(PCField.getText()); //set MAR to PC address
                     int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
                     int memoryValue = this.sim.getFromMemory(addr);
@@ -541,6 +542,7 @@ public class ComputerGUI extends Application {
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
                     this.sim.setPC(temp); //converts value in Octal text box to a decimal string
+                    this.sim.setMAR(temp);
                     PCField.setText(num);
                     MARField.setText(num);
                     int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
@@ -563,6 +565,7 @@ public class ComputerGUI extends Application {
                 }else{
                     num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
                     this.sim.setPC(temp); //converts value in Binary text box to an octal string then decimal string
+                    this.sim.setMAR(temp);
                     PCField.setText(num);
                     MARField.setText(num); //set MAR to PC address
                     int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
