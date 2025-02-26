@@ -284,7 +284,7 @@ public class Simulator {
                 }
 
                 String address = words[0];
-                if(Conversion.convertToDecimal(address) > 2047){
+                if(Conversion.convertToDecimal(address) < 6 || Conversion.convertToDecimal(address) > 2047){
                     System.out.println("ERROR: Cannot store in memory over 2047");
                     return false;
                 }
@@ -299,8 +299,8 @@ public class Simulator {
             this.memory.forEach((key, value) -> System.out.println(key + " -> " + value));
         }
 
-        private boolean storeInMemory(int address, int value){
-            if(address < 0 || address > 2047){
+        public boolean storeInMemory(int address, int value){
+            if(address < 6 || address > 2047){
                 return false;
             }else if(value < 0 || value > 65535){
                 return false;
@@ -329,23 +329,23 @@ public class Simulator {
                 case 0: //load into gpr0
                     this.setGPR0(this.getFromMemory(add));
                     System.out.println("GPR0 set with: " + this.getFromMemory(add));
-                    break;
+                    return "GPR0 set with: " + this.getFromMemory(add);
                 case 1: //load into gpr1
                     this.setGPR1(this.getFromMemory(add));
                     System.out.println("GPR1 set with: " + this.getFromMemory(add));
-                    break;
+                    return "GPR1 set with: " + this.getFromMemory(add);
                 case 2: //load into gpr2
                     this.setGPR2(this.getFromMemory(add));
                     System.out.println("GPR2 set with: " + this.getFromMemory(add));
-                    break;
+                    return "GPR2 set with: " + this.getFromMemory(add);
                 case 3: //load into gpr3
                     this.setGPR3(this.getFromMemory(add));
                     System.out.println("GPR3 set with: " + this.getFromMemory(add));
-                    break;
+                    return "GPR3 set with: " + this.getFromMemory(add);
                 default:
-                    System.out.println("Invalid command.");
+                    System.out.println("Invalid command");
+                    return "Invalid command";
             }
-            return null;
         }
 
         //Store value in gpr to memory
@@ -355,23 +355,23 @@ public class Simulator {
                 case 0: //store gpr0 to memory
                     this.memory.put(add, this.GPR0);
                     System.out.println("GPR0: " + this.GPR0 + " stored at: " + add);
-                    break;
+                    return "GPR0: " + this.GPR0 + " stored at: " + add;
                 case 1: //store gpr1 to memory
                     this.memory.put(add, this.GPR1);
                     System.out.println("GPR1: " + this.GPR1 + " stored at: " + add);
-                    break;
+                    return "GPR1: " + this.GPR1 + " stored at: " + add;
                 case 2: //store gpr2 to memory
                     this.memory.put(add, this.GPR2);
                     System.out.println("GPR2: " + this.GPR2 + " stored at: " + add);
-                    break;
+                    return "GPR2: " + this.GPR2 + " stored at: " + add;
                 case 3: //store gpr3 to memory
                     this.memory.put(add, this.GPR3);
                     System.out.println("GPR3: " + this.GPR3 + " stored at: " + add);
-                    break;
+                    return "GPR3: " + this.GPR3 + " stored at: " + add;
                 default:
-                    System.out.println("Invalid command.");
+                    System.out.println("Invalid command");
+                    return "Invalid command";
             }
-            return null;
         }
 
         //Load gpr register with address
@@ -381,23 +381,23 @@ public class Simulator {
                 case 0: //load into gpr0
                     this.setGPR0(add);
                     System.out.println("GPR0 set with: " + add);
-                    break;
+                    return "GPR0 set with: " + add;
                 case 1: //load into gpr1
                     this.setGPR1(add);
                     System.out.println("GPR1 set with: " + add);
-                    break;
+                    return "GPR1 set with: " + add;
                 case 2: //load into gpr2
                     this.setGPR2(add);
                     System.out.println("GPR2 set with: " + add);
-                    break;
+                    return "GPR2 set with: " + add;
                 case 3: //load into gpr3
                     this.setGPR3(add);
                     System.out.println("GPR3 set with: " + add);
-                    break;
+                    return "GPR3 set with: " + add;
                 default:
-                    System.out.println("Invalid command.");
+                    System.out.println("Invalid command");
+                    return "Invalid command";
             }
-            return null;
         }
 
         //Load Index register from memory
@@ -407,19 +407,19 @@ public class Simulator {
                 case 1: //load into ixr1
                     this.setIXR1(this.getFromMemory(add));
                     System.out.println("IXR1 set with: " + this.getFromMemory(add));
-                    break;
+                    return "IXR1 set with: " + this.getFromMemory(add);
                 case 2: //load into ixr2
                     this.setIXR2(this.getFromMemory(add));
                     System.out.println("IXR2 set with: " + this.getFromMemory(add));
-                    break;
+                    return "IXR2 set with: " + this.getFromMemory(add);
                 case 3: //load into ixr3
                     this.setIXR3(this.getFromMemory(add));
                     System.out.println("IXR3 set with: " + this.getFromMemory(add));
-                    break;
+                    return "IXR3 set with: " + this.getFromMemory(add);
                 default:
-                    System.out.println("Invalid command.");
+                    System.out.println("Invalid command");
+                    return "Invalid command";
             }
-            return null;
         }
 
         //Store Index register to memory
@@ -429,20 +429,19 @@ public class Simulator {
                 case 1: //store ixr1 to memory
                     this.memory.put(add, this.IXR1);
                     System.out.println("IXR1: " + this.IXR1 + " stored at: " + add);
-                    break;
+                    return "IXR1: " + this.IXR1 + " stored at: " + add;
                 case 2: //store ixr2 to memory
                     this.memory.put(add, this.IXR2);
                     System.out.println("IXR2: " + this.IXR2 + " stored at: " + add);
-                    break;
+                    return "IXR2: " + this.IXR2 + " stored at: " + add;
                 case 3: //store ixr3 to memory
                     this.memory.put(add, this.IXR3);
                     System.out.println("IXR3: " + this.IXR3 + " stored at: " + add);
-                    break;
+                    return "IXR3: " + this.IXR3 + " stored at: " + add;
                 default:
-                    System.out.println("Invalid command.");
+                    System.out.println("Invalid command");
+                    return "Invalid command";
             }
-
-            return "";
         }
 
         private int computeEffectiveAddress(int ixr, int indirect, int address){

@@ -185,15 +185,49 @@ public class ComputerGUI extends Application {
         btnIPL.setEffect(shadow);
         btnIPL.setStyle("-fx-background-color: red; -fx-text-fill: white;");
 
-        btnLoad.setOnAction(e -> System.out.println("Load button clicked"));
-        btnStore.setOnAction(e -> System.out.println("Store button clicked"));
+        btnLoad.setOnAction(e -> {
+            if(!MARField.getText().equals("")){ //MAR text box is filled in
+                int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
+            
+                int memoryValue = this.sim.getFromMemory(addr);
+                if(memoryValue == -1){
+                    System.out.println("Invalid Memory Address");
+                    debugOutput.setText("Invalid Memory Address");
+                }else{
+                    MBRField.setText(String.valueOf(memoryValue));
+                    this.sim.setMBR(memoryValue);
+                    debugOutput.setText("Address: " + MARField.getText()  + " : " + String.valueOf(memoryValue) + " loaded into MBR");
+                }
+            }else{
+                debugOutput.setText("Must have a value in the MAR to Load from memory");
+            }
+        });
+
+        btnStore.setOnAction(e -> { 
+            if(!MARField.getText().equals("") && !MBRField.getText().equals("")){ //MAR and MBR text box is filled in
+                int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
+                int val = Integer.parseInt(MBRField.getText()); //value has already been checked to be within valid value range
+                boolean memoryResult = this.sim.storeInMemory(addr, val);
+                if(!memoryResult){
+                    System.out.println("Invalid Memory Address");
+                    debugOutput.setText("Invalid Memory Address");
+                }else{
+                    debugOutput.setText("Stored: " + MBRField.getText() + " at Address: " + MARField.getText());
+                }
+            }else if(!MARField.getText().equals("") && MBRField.getText().equals("")){ //MAR filled in but MBR not filled in
+                debugOutput.setText("Must have a value in the MBR to Store to memory");
+            }else if(MARField.getText().equals("") && !MBRField.getText().equals("")){
+                debugOutput.setText("Must have a value in the MAR to Store to memory");
+            }
+        });
+
         btnRun.setOnAction(e -> {
             System.out.println("Run button clicked");
             this.sim.run();
         });
         btnStep.setOnAction(e -> {
             System.out.println("Step button clicked");
-            HashMap<String, String> registerContents = this.sim.step();
+            HashMap<String, String> registerContents = this.sim.step(); //register contents returns a hashmap of all register contents after step()
             
         });
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
@@ -457,13 +491,24 @@ public class ComputerGUI extends Application {
         //program counter button
         btnPC.setOnAction(e -> {
             String num = "";
-            if(!PCField.getText().equals("")){ //gpr text box filled in
+            if(!PCField.getText().equals("")){ //PC text box filled in
                 int temp = Integer.parseInt(PCField.getText());
                 if(temp < 0 || temp > 4095){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setPC(Integer.parseInt(PCField.getText()));
-                    debugOutput.setText("PC set with: " + PCField.getText());
+                    MARField.setText(PCField.getText()); //set MAR to PC address
+                    int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
+                    int memoryValue = this.sim.getFromMemory(addr);
+                    if(memoryValue == -1){
+                        debugOutput.setText("No value set at " + MARField.getText()  + " to load into MBR."
+                        + "\nPC set with: " + PCField.getText());
+                    }else{
+                        MBRField.setText(String.valueOf(memoryValue));
+                        this.sim.setMBR(memoryValue);
+                        debugOutput.setText("Address: " + MARField.getText()  + " : " + String.valueOf(memoryValue) + " loaded into MBR." 
+                        +"\nPC set with: " + PCField.getText());
+                    }
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
@@ -473,19 +518,42 @@ public class ComputerGUI extends Application {
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
                     this.sim.setPC(temp); //converts value in Octal text box to a decimal string
                     PCField.setText(num);
+                    MARField.setText(num);
+                    int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
+                    int memoryValue = this.sim.getFromMemory(addr);
+                    if(memoryValue == -1){
+                        debugOutput.setText("No value set at " + MARField.getText()  + " to load into MBR."
+                        + "\nPC set with: " + num);
+                    }else{
+                        MBRField.setText(String.valueOf(memoryValue));
+                        this.sim.setMBR(memoryValue);
+                        debugOutput.setText("Address: " + MARField.getText()  + " : " + String.valueOf(memoryValue) + " loaded into MBR." 
+                        +"\nPC set with: " + num);
+                    }
                     fieldMap.get("Octal").setText("");
-                    debugOutput.setText("PC set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
                 int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
                 if(temp < 0 || temp > 4095){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
-                this.sim.setPC(temp); //converts value in Binary text box to an octal string then decimal string
-                PCField.setText(num);
+                    num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                    this.sim.setPC(temp); //converts value in Binary text box to an octal string then decimal string
+                    PCField.setText(num);
+                    MARField.setText(num); //set MAR to PC address
+                    int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
+                    int memoryValue = this.sim.getFromMemory(addr);
+                    if(memoryValue == -1){
+                        debugOutput.setText("No value set at " + MARField.getText()  + " to load into MBR."
+                        + "\nPC set with: " + num);
+                    }else{
+                        MBRField.setText(String.valueOf(memoryValue));
+                        this.sim.setMBR(memoryValue);
+                        debugOutput.setText("Address: " + MARField.getText()  + " : " + String.valueOf(memoryValue) + " loaded into MBR." 
+                        +"\nPC set with: " + num);
+                    }
+
                 fieldMap.get("Binary").setText("");
-                debugOutput.setText("PC set with: " + num);
                 }
             }
         });
@@ -495,7 +563,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!MARField.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(MARField.getText());
-                if(temp < 0 || temp > 4095){
+                if(temp < 6 || temp > 4095){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setMAR(Integer.parseInt(MARField.getText()));
@@ -503,7 +571,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 4095){
+                if(temp < 6 || temp > 4095){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -514,7 +582,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
                 int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 4095){
+                if(temp < 6 || temp > 4095){
                     debugOutput.setText("Value is not valid.");
                 }else{
                 num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
