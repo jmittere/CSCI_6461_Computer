@@ -338,7 +338,6 @@ public class Simulator {
         //takes the loadFile array list and adds each instruction to its memory location
         private boolean initializeMemory(){
             for (String line : this.loadFile) {
-                System.out.println("line: " + line);
                 String[] words = line.split("\\s+"); //splits by any number of spaces
                 if (words.length>2){
                     System.out.println("Incorrect Load File");
@@ -352,7 +351,6 @@ public class Simulator {
                 }
                 String instruction = words[1];
                 int num = Conversion.convertToDecimal(instruction);
-                System.out.println("Num: " + num);
                 if(num<0 || num>65535){
                     System.out.println("ERROR: Cannot store a value over 65535 or less than 0");
                     return false;

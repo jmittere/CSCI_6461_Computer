@@ -1,4 +1,4 @@
-com/example/Simulator.class
-com/example/ComputerGUI.class
+com\example\ComputerGUI.class
+com\example\Conversion.class
+com\example\Simulator.class
 module-info.class
-com/example/Conversion.class
