@@ -338,6 +338,7 @@ public class Simulator {
         //takes the loadFile array list and adds each instruction to its memory location
         private boolean initializeMemory(){
             for (String line : this.loadFile) {
+                System.out.println("line: " + line);
                 String[] words = line.split("\\s+"); //splits by any number of spaces
                 if (words.length>2){
                     System.out.println("Incorrect Load File");
@@ -350,7 +351,14 @@ public class Simulator {
                     return false;
                 }
                 String instruction = words[1];
-                this.memory.put(Conversion.convertToDecimal(address), Conversion.convertToDecimal(instruction));
+                int num = Conversion.convertToDecimal(instruction);
+                System.out.println("Num: " + num);
+                if(num<0 || num>65535){
+                    System.out.println("ERROR: Cannot store a value over 65535 or less than 0");
+                    return false;
+                }else{
+                    this.memory.put(Conversion.convertToDecimal(address), Conversion.convertToDecimal(instruction));
+                }
             }
             this.printMemory();
             return true;
@@ -509,12 +517,8 @@ public class Simulator {
             int ea = -1;
             if(ixr == 0){
                 ea = address;
-            }else if(ixr==1){
-                ea = this.IXR1 + address;
-            }else if(ixr==2){
-                ea = this.IXR2 + address;
-            }else if(ixr==3){
-                ea = this.IXR3 + address;
+            }else if(ixr==1 || ixr==2 || ixr==3){
+                ea = ixr + address;
             }
 
             if(indirect == 1){

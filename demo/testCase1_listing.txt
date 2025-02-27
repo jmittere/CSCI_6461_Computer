@@ -1,0 +1,9 @@
+                  LOC 7
+000007   000001   Data 1
+000010   000002   Data 2
+000011   000003   Data 3
+000012   002007   LDR 0,0,7   ;Load GPR0 with 1 from address 7    
+000013   004024   STR 0,0,20     ;Store GPR0 at address 20 (1 should be stored at 20)
+000014   006424   LDA 1,0,20  ;Load GPR1 with 20 (20 is an address) 
+000015   102107   LDX 1,7     ;Load IXR1 with contents of address 8 (value of 2) ea is ixr1(1)+address of 7
+000016   104124   STX 1,20   ;Store IXR1 at address 21 (2 should be stored at 21)
