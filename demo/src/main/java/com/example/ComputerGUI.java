@@ -191,7 +191,7 @@ public class ComputerGUI extends Application {
             
                 int memoryValue = this.sim.getFromMemory(addr);
                 if(memoryValue == -1){
-                    System.out.println("Invalid Memory Address");
+                    //System.out.println("Invalid Memory Address");
                     debugOutput.setText("Invalid Memory Address");
                 }else{
                     MBRField.setText(String.valueOf(memoryValue));
@@ -209,7 +209,7 @@ public class ComputerGUI extends Application {
                 int val = Integer.parseInt(MBRField.getText()); //value has already been checked to be within valid value range
                 boolean memoryResult = this.sim.storeInMemory(addr, val);
                 if(!memoryResult){
-                    System.out.println("Invalid Memory Address");
+                    //System.out.println("Invalid Memory Address");
                     debugOutput.setText("Invalid Memory Address");
                 }else{
                     debugOutput.setText("Stored: " + MBRField.getText() + " at Address: " + MARField.getText());
@@ -256,7 +256,7 @@ public class ComputerGUI extends Application {
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
         btnIPL.setOnAction(e -> {
             String pf = fieldMap.get("Program File").getText();
-            System.out.println("Program File Path: " + pf);
+            //System.out.println("Program File Path: " + pf);
             if(pf.equals("")){ //use hardcoded preloaded file
                 pf = "preload.txt";
             }
