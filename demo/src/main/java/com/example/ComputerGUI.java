@@ -1,7 +1,6 @@
 package com.example;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -258,7 +257,7 @@ public class ComputerGUI extends Application {
             String pf = fieldMap.get("Program File").getText();
             //System.out.println("Program File Path: " + pf);
             if(pf.equals("")){ //use hardcoded preloaded file
-                pf = "preload.txt";
+                pf = "src/main/resources/preload.txt";
             }
             this.sim.setProgramFile(pf);
             boolean successInitialization = this.sim.initializeProgram();

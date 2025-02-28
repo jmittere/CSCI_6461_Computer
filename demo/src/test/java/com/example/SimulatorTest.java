@@ -10,7 +10,7 @@ public class SimulatorTest {
     @Test
     public void testLoadFile(){
         
-        String pf = "preload.txt";
+        String pf = "src/main/resources/preload.txt";
         this.sim.setProgramFile(pf);
         boolean successInitialization = this.sim.initializeProgram();
         assertEquals(true, successInitialization);
@@ -18,7 +18,7 @@ public class SimulatorTest {
 
     @Test
     public void testStep(){
-        String pf = "preload.txt";
+        String pf = "src/main/resources/preload.txt";
         this.sim.setProgramFile(pf);
         this.sim.setPC(10);
         boolean successInitialization = this.sim.initializeProgram();
@@ -30,7 +30,7 @@ public class SimulatorTest {
     }
     @Test
     public void testRun(){
-        String pf = "preload.txt";
+        String pf = "src/main/resources/preload.txt";
         this.sim.setProgramFile(pf);
         this.sim.setPC(7);
         boolean successInitialization = this.sim.initializeProgram();
