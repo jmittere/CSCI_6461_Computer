@@ -26,6 +26,7 @@ public class Simulator {
         private int MAR;
         private int MBR;
         private int MFR;
+        private int IR;
 
         //debug output to be passed to the frontend debugOutput text area 
         //contains error code if failed instruction or symbolic instruction
@@ -56,6 +57,7 @@ public class Simulator {
             this.GPR1 = -1;
             this.GPR2 = -1;
             this.GPR3 = -1;
+            this.IR = -1;
             this.IXR1 = -1;
             this.IXR2 = -1;
             this.IXR3 = -1;
@@ -129,6 +131,11 @@ public class Simulator {
                 this.registers.put("MFR", "");
             }else{
                 this.registers.put("MFR", String.valueOf(this.MFR));
+            }
+            if(this.IR == -1){
+                this.registers.put("IR", "");
+            }else{
+                this.registers.put("IR", String.valueOf(this.IR));
             }
             this.registers.put("debugOutput", this.debugOutput);
         }
@@ -391,7 +398,7 @@ public class Simulator {
 
         //Load gpr register with value from memory
         private String LDR(int gpr, int ixr, int indirect, int address){
-            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
             switch (gpr) {
                 case 0: //load into gpr0
                     this.setGPR0(this.getFromMemory(add));
@@ -417,7 +424,7 @@ public class Simulator {
 
         //Store value in gpr to memory
         private String STR(int gpr, int ixr, int indirect, int address){
-            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
             switch (gpr) {
                 case 0: //store gpr0 to memory
                     this.memory.put(add, this.GPR0);
@@ -443,7 +450,7 @@ public class Simulator {
 
         //Load gpr register with address
         private String LDA(int gpr, int ixr, int indirect, int address){
-            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
             switch (gpr) {
                 case 0: //load into gpr0
                     this.setGPR0(add);
@@ -469,7 +476,7 @@ public class Simulator {
 
         //Load Index register from memory
         private String LDX(int gpr, int ixr, int indirect, int address){
-            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            int add = this.computeEffectiveAddress(ixr, indirect, address, true);
             switch (ixr) {
                 case 1: //load into ixr1
                     this.setIXR1(this.getFromMemory(add));
@@ -491,7 +498,7 @@ public class Simulator {
 
         //Store Index register to memory
         private String STX(int gpr, int ixr, int indirect, int address){
-            int add = this.computeEffectiveAddress(ixr, indirect, address);
+            int add = this.computeEffectiveAddress(ixr, indirect, address, true);
             switch (ixr) {
                 case 1: //store ixr1 to memory
                     this.memory.put(add, this.IXR1);
@@ -511,13 +518,37 @@ public class Simulator {
             }
         }
 
-        private int computeEffectiveAddress(int ixr, int indirect, int address){
+        private int computeEffectiveAddress(int ixr, int indirect, int address, boolean ignoreIXR){
             int ea = -1;
-            if(ixr == 0){
+            if(ignoreIXR){ //LDX or STX instruction
                 ea = address;
-            }else if(ixr==1 || ixr==2 || ixr==3){
-                ea = ixr + address;
+            }else{
+                if(ixr == 0){
+                    ea = address;
+                }else if(ixr==1){
+                    if(this.IXR1 == -1){ //ixr1 not set yet, so use 0 as the value in ixr
+                        ea = address;
+                    }else{
+                        ea = this.IXR1 + address;
+                    }
+                }else if(ixr==2){
+                    if(this.IXR2 == -1){
+                        ea = address;
+                    }else{
+                        ea = this.IXR2 + address;
+                    }
+                }else if(ixr==3){
+                    if(this.IXR3 == -1){
+                        ea = address;
+                    }else{
+                        ea = this.IXR3 + address;
+                    }
+                }else{
+                    System.out.println("Invalid IXR");
+                }
+
             }
+            
 
             if(indirect == 1){
                 ea = getFromMemory(ea);
@@ -530,9 +561,18 @@ public class Simulator {
             if(this.PC!=-1){
                 this.MAR = this.PC;
                 this.MBR = this.getFromMemory(this.MAR);
+                this.IR = this.getFromMemory(PC);
             }
         }
     
+        public int getIR(){
+            return this.IR;
+        }
+
+        public void setIR(int ir) {
+            this.IR = ir;
+        }
+
         public int getGPR0() {
             return GPR0;
         }

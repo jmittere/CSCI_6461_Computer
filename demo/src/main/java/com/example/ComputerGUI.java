@@ -234,6 +234,7 @@ public class ComputerGUI extends Application {
             MARField.setText(registerContents.get("MAR"));
             MBRField.setText(registerContents.get("MBR"));
             fieldMap.get("MFR").setText(registerContents.get("MFR"));
+            fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
         });
         btnStep.setOnAction(e -> {
@@ -249,6 +250,7 @@ public class ComputerGUI extends Application {
             MARField.setText(registerContents.get("MAR"));
             MBRField.setText(registerContents.get("MBR"));
             fieldMap.get("MFR").setText(registerContents.get("MFR"));
+            fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
         });
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
@@ -530,6 +532,8 @@ public class ComputerGUI extends Application {
                         + "\nPC set with: " + PCField.getText());
                     }else{
                         MBRField.setText(String.valueOf(memoryValue));
+                        fieldMap.get("IR").setText(String.valueOf(memoryValue));
+                        this.sim.setIR(memoryValue);
                         this.sim.setMBR(memoryValue);
                         debugOutput.setText("Address: " + MARField.getText()  + " : " + String.valueOf(memoryValue) + " loaded into MBR." 
                         +"\nPC set with: " + PCField.getText());
@@ -552,6 +556,8 @@ public class ComputerGUI extends Application {
                         + "\nPC set with: " + num);
                     }else{
                         MBRField.setText(String.valueOf(memoryValue));
+                        fieldMap.get("IR").setText(String.valueOf(memoryValue));
+                        this.sim.setIR(memoryValue);
                         this.sim.setMBR(memoryValue);
                         debugOutput.setText("Address: " + MARField.getText()  + " : " + String.valueOf(memoryValue) + " loaded into MBR." 
                         +"\nPC set with: " + num);
@@ -575,6 +581,8 @@ public class ComputerGUI extends Application {
                         + "\nPC set with: " + num);
                     }else{
                         MBRField.setText(String.valueOf(memoryValue));
+                        fieldMap.get("IR").setText(String.valueOf(memoryValue));
+                        this.sim.setIR(memoryValue);
                         this.sim.setMBR(memoryValue);
                         debugOutput.setText("Address: " + MARField.getText()  + " : " + String.valueOf(memoryValue) + " loaded into MBR." 
                         +"\nPC set with: " + num);

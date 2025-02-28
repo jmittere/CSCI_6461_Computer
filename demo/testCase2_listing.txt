@@ -2,8 +2,8 @@
 000014   000012   Data 10
 000015   000013   Data 11
 000016   000014   Data 12
-000017   002513   LDR 1,1,11   ;Load GPR1 with 10 from address 12    
+000017   002414   LDR 1,0,12   ;Load GPR1 with 10 from address 12    
 000020   004415   STR 1,0,13     ;Store GPR1 at address 13 (overwriting contents at address 13)
-000021   007212   LDA 2,2,10  ;Load GPR2 with 12 (12 is an address) 
-000022   102114   LDX 1,12     ;Load IXR1 with contents of address 13 (value of 10) ea is ixr1(1)+address of 12
-000023   104124   STX 1,20   ;Store IXR1 at address 21 (2 should be stored at 21)
+000021   007014   LDA 2,0,12  ;Load GPR2 with 12 (12 is an address) 
+000022   102115   LDX 1,13     ;Load IXR1 with contents of address 13 (value of 10) ea is address of 13
+000023   104124   STX 1,20   ;Store IXR1 at address 20 (10 should be stored at 20)
