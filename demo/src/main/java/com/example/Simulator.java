@@ -2,6 +2,7 @@ package com.example;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Scanner;
 
 import java.util.ArrayList;
@@ -326,9 +327,24 @@ public class Simulator {
                     String line = scanner.nextLine();
                     this.loadFile.add(line);
                 }
-            } catch (FileNotFoundException e) {
+            } catch (FileNotFoundException err) {
                 //System.err.println("File not found: " + e.getMessage());
-                return false;
+                try (InputStream input = getClass().getClassLoader().getResourceAsStream(this.programFile)) {
+                if (input == null) {
+                    System.out.println("File not found!");
+                    return false;
+                }
+
+                Scanner scanner = new Scanner(input);
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    this.loadFile.add(line);
+                }
+                scanner.close(); 
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
             }
             if(this.loadFile.size() > 0){
                 boolean loadedMemory = this.initializeMemory();
