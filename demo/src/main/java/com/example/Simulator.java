@@ -52,6 +52,9 @@ public class Simulator {
         //Important: key is the register, value is the contents of the register in STRING form
         public HashMap<String, String> registers;
 
+        //represents L1 cache 
+        public Cache cache;
+
         // Constructor
         public Simulator() {
             this.GPR0 = -1;
@@ -73,6 +76,7 @@ public class Simulator {
             this.opCodes = new HashMap<>();
             this.registers = new HashMap<>();
             this.initializeOpcodes();
+            this.cache = new Cache();
         }
 
         //updates hashmap that has contents of each register
@@ -184,14 +188,37 @@ public class Simulator {
         } 
         
         //retrieves a value from an address in memory using a String decimal address
+        //adds address and memory to cache if not already loaded 
         public int getFromMemory(int address){
+            Cacheblock c = this.cache.getCacheBlock(address);
+            if (c==null) { //address not loaded into cache
+                System.out.println(address + " not in cache");
+            }else{
+                return c.getValue();
+            }
+
             if(!memory.containsKey(address)){
                 return -1;
             }else if(address < 0 || address > 2047){
                 //TODO: Throw exception for trying to access memory out of bounds exception
                 return -1;
             }else{
-                return this.memory.get(address);
+                int val = this.memory.get(address); //value from memory
+                //TODO: maybe do write back here if we are removing a cache line and dirty bit is set? DONT USE storeInMemory() function 
+                Cacheblock deadBlock = this.cache.setCacheBlock(address, val); //add address and value to cache before returning memory
+                if(deadBlock != null){ //need to do a write back
+                    int addr = deadBlock.getAddress();
+                    val = deadBlock.getValue();        
+                    if(addr < 6 || addr > 2047){
+                        System.out.println("Error storing during write back...");
+                    }else if(val < 0 || val > 65535){
+                        System.out.println("Error storing during write back...");
+                    }else{
+                        this.memory.put(addr, val);
+                        System.out.println("Stored value back in memory for cache block...");
+                    }
+                }
+                return val;
             }
         }
 
@@ -390,6 +417,12 @@ public class Simulator {
         }
 
         public boolean storeInMemory(int address, int value){
+            if(this.cache.containsAddress(address)){ //cache has address, so write to cache rather than memory
+                this.cache.getCacheBlock(address).setValue(value);
+                this.cache.getCacheBlock(address).setDirtyBit(1); //modified value for memory in cache
+                return true;
+            }
+
             if(address < 6 || address > 2047){
                 return false;
             }else if(value < 0 || value > 65535){
