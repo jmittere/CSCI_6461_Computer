@@ -28,7 +28,7 @@ public class Simulator {
         private int MBR;
         private int MFR;
         private int IR;
-
+        private int[] conditionCode;
         //debug output to be passed to the frontend debugOutput text area 
         //contains error code if failed instruction or symbolic instruction
         private String debugOutput;
@@ -62,6 +62,10 @@ public class Simulator {
             this.GPR2 = -1;
             this.GPR3 = -1;
             this.IR = -1;
+            this.conditionCode = new int[4]; //[OVERFLOW, UNDERFLOW, DIVZERO, EQUALNOT] 
+            for (int i=0; i<conditionCode.length; i++){
+                this.conditionCode[i] = 0;
+            }
             this.IXR1 = -1;
             this.IXR2 = -1;
             this.IXR3 = -1;
@@ -142,6 +146,15 @@ public class Simulator {
             }else{
                 this.registers.put("IR", String.valueOf(this.IR));
             }
+            if(this.conditionCode[0] == 1){
+                this.registers.put("CC", "OVERFLOW");
+            }else if(this.conditionCode[1] == 1){
+                this.registers.put("CC", "UNDERFLOW");
+            }else if(this.conditionCode[2] == 1){
+                this.registers.put("CC", "DIVZERO");
+            }else if(this.conditionCode[3] == 1){
+                this.registers.put("CC", "EQUALORNOT");
+            }  
             this.registers.put("debugOutput", this.debugOutput);
         }
 
@@ -204,7 +217,6 @@ public class Simulator {
                 return -1;
             }else{
                 int val = this.memory.get(address); //value from memory
-                //TODO: maybe do write back here if we are removing a cache line and dirty bit is set? DONT USE storeInMemory() function 
                 Cacheblock deadBlock = this.cache.setCacheBlock(address, val); //add address and value to cache before returning memory
                 if(deadBlock != null){ //need to do a write back
                     int addr = deadBlock.getAddress();
@@ -214,8 +226,8 @@ public class Simulator {
                     }else if(val < 0 || val > 65535){
                         System.out.println("Error storing during write back...");
                     }else{
-                        this.memory.put(addr, val);
-                        System.out.println("Stored value back in memory for cache block...");
+                        this.memory.put(addr, val); //write back
+                        System.out.println("Write Back: Stored value back in memory for cache block...");
                     }
                 }
                 return val;
@@ -567,6 +579,238 @@ public class Simulator {
             }
         }
 
+        //Add memory to register
+        private String AMR(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            int valFromMemory = this.getFromMemory(add);
+            assert valFromMemory < 32: "Immediates cannot be greater than 32";
+            switch (gpr) {
+                case 0: //add contents of memory to contents of Gpr0
+                    this.GPR0 = this.GPR0+valFromMemory;
+                    return valFromMemory + " added to GPR0 which is now: " + this.GPR0 + "\n" + this.detectOverUnder(this.GPR0);
+                case 1: //add contents of memory to contents of Gpr1
+                    this.GPR1 = this.GPR1+valFromMemory;
+                    return valFromMemory + " added to GPR1 which is now: " + this.GPR1 + "\n" + this.detectOverUnder(this.GPR1);
+                case 2: //add contents of memory to contents of Gpr2
+                    this.GPR2 = this.GPR2+valFromMemory;
+                    return valFromMemory + " added to GPR2 which is now: " + this.GPR2 + "\n" + this.detectOverUnder(this.GPR2);
+                case 3: //add contents of memory to contents of Gpr3
+                    this.GPR3 = this.GPR3+valFromMemory;
+                    return valFromMemory + " added to GPR3 which is now: " + this.GPR3 + "\n" + this.detectOverUnder(this.GPR3);
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Subtract memory from register
+        private String SMR(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            int valFromMemory = this.getFromMemory(add);
+            assert valFromMemory < 32: "Immediates cannot be greater than 32";
+            switch (gpr) {
+                case 0: //subtracts contents of memory from contents of Gpr0
+                    this.GPR0 = this.GPR0-valFromMemory;
+                    return valFromMemory + " subtracted from GPR0 which is now: " + this.GPR0 + "\n" + this.detectOverUnder(this.GPR0);
+                case 1: //subtracts contents of memory from contents of Gpr1
+                    this.GPR1 = this.GPR1-valFromMemory;
+                    return valFromMemory + " subtracted from GPR1 which is now: " + this.GPR1 + "\n" + this.detectOverUnder(this.GPR1);
+                case 2: //subtracts contents of memory from contents of Gpr2
+                    this.GPR2 = this.GPR2-valFromMemory;
+                    return valFromMemory + " subtracted from GPR2 which is now: " + this.GPR2 + "\n" + this.detectOverUnder(this.GPR2);
+                case 3: //subtracts contents of memory from contents of Gpr3
+                    this.GPR3 = this.GPR3-valFromMemory;
+                    return valFromMemory + " subtracted from GPR3 which is now: " + this.GPR3 + "\n" + this.detectOverUnder(this.GPR3);
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Add immediate to register
+        private String AIR(int gpr, int immediate){            
+            switch (gpr) {
+                case 0: //add immediate to contents of Gpr0
+                    if (this.GPR0==-1){
+                        this.GPR0 = immediate;
+                    }else{
+                        this.GPR0 = this.GPR0 + immediate;
+                    }
+                    return immediate + " added to GPR0 which is now: " + this.GPR0 + "\n" + this.detectOverUnder(this.GPR0);
+                case 1: //add immediate to contents of Gpr0
+                    if (this.GPR1==-1){
+                        this.GPR1 = immediate;
+                    }else{
+                        this.GPR1 = this.GPR1 + immediate;
+                    }
+                    return immediate + " added to GPR1 which is now: " + this.GPR1 + "\n" + this.detectOverUnder(this.GPR1);
+                case 2: //add immediate to contents of Gpr0
+                    if (this.GPR2==-1){
+                        this.GPR2 = immediate;
+                    }else{
+                        this.GPR2 = this.GPR2 + immediate;
+                    }
+                    return immediate + " added to GPR2 which is now: " + this.GPR2 + "\n" + this.detectOverUnder(this.GPR2);
+                case 3: //add immediate to contents of Gpr0
+                    if (this.GPR3==-1){
+                        this.GPR3 = immediate;
+                    }else{
+                        this.GPR3 = this.GPR3 + immediate;
+                    }
+                    return immediate + " added to GPR3 which is now: " + this.GPR3 + "\n" + this.detectOverUnder(this.GPR3);
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        private String SIR(int gpr, int immediate){
+            switch (gpr) {
+                case 0: //subtract immediate from contents of Gpr0
+                    if (this.GPR0==-1){
+                        this.GPR0 = immediate*-1;
+                    }else{
+                        this.GPR0 = this.GPR0 - immediate;
+                    }
+                    return immediate + " subtracted from GPR0 which is now: " + this.GPR0 + "\n" + this.detectOverUnder(this.GPR0);
+                case 1: //subtract immediate from contents of Gpr1
+                    if (this.GPR1==-1){
+                        this.GPR1 = immediate*-1;
+                    }else{
+                        this.GPR1 = this.GPR1 - immediate;
+                    }
+                    return immediate + " subtracted from GPR1 which is now: " + this.GPR1 + "\n" + this.detectOverUnder(this.GPR1);
+                case 2: //subtract immediate from contents of Gpr2
+                    if (this.GPR2==-1){
+                        this.GPR2 = immediate*-1;
+                    }else{
+                        this.GPR2 = this.GPR2 - immediate;
+                    }
+                    return immediate + " subtracted from GPR2 which is now: " + this.GPR2 + "\n" + this.detectOverUnder(this.GPR2);
+                case 3: //subtract immediate from contents of Gpr3
+                    if (this.GPR3==-1){
+                        this.GPR3 = immediate*-1;
+                    }else{
+                        this.GPR3 = this.GPR3 - immediate;
+                    }
+                    return immediate + " subtracted from GPR3 which is now: " + this.GPR3 + "\n" + this.detectOverUnder(this.GPR3);
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Jump if Zero
+        private String JZ(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            switch (gpr) {
+                case 0: 
+                    if(this.GPR0 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR0" + this.GPR0 + " Not equal to zero";
+                    }
+                case 1: 
+                    if(this.GPR1 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR1" + this.GPR1 + " Not equal to zero";
+                    }
+                case 2: 
+                    if(this.GPR2 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR2" + this.GPR2 + " Not equal to zero";
+                    }
+                case 3: 
+                    if(this.GPR3 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR3" + this.GPR3 + " Not equal to zero";
+                    }
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Jump IF register uninitialized or zero
+        private String JNE(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            switch (gpr) {
+                case 0: 
+                    if(this.GPR0 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR0" + this.GPR0 + " equals zero";
+                    }
+                case 1: 
+                    if(this.GPR1 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR1" + this.GPR1 + " equals zero";
+                    }
+                case 2: 
+                    if(this.GPR2 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR2" + this.GPR2 + " equals zero";
+                    }
+                case 3: 
+                    if(this.GPR3 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR3" + this.GPR3 + " equals zero";
+                    }
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //MULTIPLY AND DIVIDE INSTRUCTIONS//
+        private String MLT(int gprx, int gpry, int indirect, int address){
+            assert (gprx == 0 || gprx == 2) && (gpry == 0 || gpry == 2): "GPRX and GPRY must be 0 or 2"; 
+            long num = 0;
+            long limit = 4294967295L;
+            switch (gprx) {
+                case 0: 
+                    num = gprx*gpry;
+                    if(num> limit){
+                        conditionCode[0] = 1;
+                        return "MLT: OVERFLOW, GPR0 not set"; 
+                    }else{
+                        //split up top 16 bits in GPR0 and lower order bits in GPR1
+                        this.GPR0 = (int) ((num >> 16) & 0xFFFF);  // Right shift by 16 to bring high bits to the low end
+                        this.GPR1 = (int) (num & 0xFFFF);  // Use a mask to extract the low 16 bits
+                        return "MLT: GPR0: " + this.GPR0 + " GPR1: " + this.GPR1;
+                    }
+                case 2: 
+                    num = gprx*gpry;
+                    if(num> limit){
+                        conditionCode[0] = 1;
+                        return "MLT: OVERFLOW, GPR0 not set"; 
+                    }else{
+                        //split up top 16 bits in GPR2 and lower order bits in GPR3
+                        this.GPR2 = (int) ((num >> 16) & 0xFFFF);  // Right shift by 16 to bring high bits to the low end
+                        this.GPR3 = (int) (num & 0xFFFF);  // Use a mask to extract the low 16 bits
+                        return "MLT: GPR2: " + this.GPR2 + " GPR3: " + this.GPR3;
+                    }
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+
         private int computeEffectiveAddress(int ixr, int indirect, int address, boolean ignoreIXR){
             int ea = -1;
             if(ignoreIXR){ //LDX or STX instruction
@@ -614,6 +858,27 @@ public class Simulator {
             }
         }
     
+        //helper function to detect over or under flow
+        private String detectOverUnder(int register){
+            if(register>65535){//overflow
+                this.conditionCode = 0;
+                return "OVERFLOW";
+            }else if(register < 0){ //underflow
+                this.conditionCode = 1;
+                return "UNDERFLOW";
+            }else{
+                return "";
+            }
+        }
+
+        public int getCC(){
+            return this.conditionCode;
+        }
+
+        public void setCC(int cc){
+            this.conditionCode = cc;
+        }
+
         public int getIR(){
             return this.IR;
         }
