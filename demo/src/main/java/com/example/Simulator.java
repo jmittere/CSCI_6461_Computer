@@ -62,7 +62,7 @@ public class Simulator {
             this.GPR2 = -1;
             this.GPR3 = -1;
             this.IR = -1;
-            this.conditionCode = new int[4]; //[OVERFLOW, UNDERFLOW, DIVZERO, EQUALNOT] 
+            this.conditionCode = new int[5]; //[OVERFLOW, UNDERFLOW, DIVZERO, EQUALNOT] 
             for (int i=0; i<conditionCode.length; i++){
                 this.conditionCode[i] = 0;
             }
@@ -146,13 +146,13 @@ public class Simulator {
             }else{
                 this.registers.put("IR", String.valueOf(this.IR));
             }
-            if(this.conditionCode[0] == 1){
+            if(this.conditionCode[1] == 1){
                 this.registers.put("CC", "OVERFLOW");
-            }else if(this.conditionCode[1] == 1){
-                this.registers.put("CC", "UNDERFLOW");
             }else if(this.conditionCode[2] == 1){
-                this.registers.put("CC", "DIVZERO");
+                this.registers.put("CC", "UNDERFLOW");
             }else if(this.conditionCode[3] == 1){
+                this.registers.put("CC", "DIVZERO");
+            }else if(this.conditionCode[4] == 1){
                 this.registers.put("CC", "EQUALORNOT");
             }  
             this.registers.put("debugOutput", this.debugOutput);
@@ -777,13 +777,18 @@ public class Simulator {
         }
 
         //MULTIPLY AND DIVIDE INSTRUCTIONS//
+        //Multiply values in two gprs
         private String MLT(int gprx, int gpry, int indirect, int address){
             assert (gprx == 0 || gprx == 2) && (gpry == 0 || gpry == 2): "GPRX and GPRY must be 0 or 2"; 
             long num = 0;
             long limit = 4294967295L;
             switch (gprx) {
                 case 0: 
-                    num = gprx*gpry;
+                    if(gpry == 0){
+                        num = this.GPR0*this.GPR0;
+                    }else{
+                        num = this.GPR0*this.GPR2;
+                    }
                     if(num> limit){
                         conditionCode[0] = 1;
                         return "MLT: OVERFLOW, GPR0 not set"; 
@@ -794,10 +799,14 @@ public class Simulator {
                         return "MLT: GPR0: " + this.GPR0 + " GPR1: " + this.GPR1;
                     }
                 case 2: 
-                    num = gprx*gpry;
+                    if(gpry == 0){
+                        num = this.GPR2*this.GPR0;
+                    }else{
+                        num = this.GPR2*this.GPR2;
+                    }
                     if(num> limit){
                         conditionCode[0] = 1;
-                        return "MLT: OVERFLOW, GPR0 not set"; 
+                        return "MLT: OVERFLOW, GPR2 not set"; 
                     }else{
                         //split up top 16 bits in GPR2 and lower order bits in GPR3
                         this.GPR2 = (int) ((num >> 16) & 0xFFFF);  // Right shift by 16 to bring high bits to the low end
@@ -810,6 +819,239 @@ public class Simulator {
             }
         }
 
+        //Divide values in two gprs
+        private String DVD(int gprx, int gpry, int indirect, int address){
+            assert (gprx == 0 || gprx == 2) && (gpry == 0 || gpry == 2): "GPRX and GPRY must be 0 or 2"; 
+            int quotient = -1;
+            int remainder = -1;
+            switch (gprx) {
+                case 0:
+                    if(gpry == 0){
+                        if(this.GPR0 == 0 || this.GPR0 == -1){
+                            conditionCode[3] = 1;
+                            return "DVD: DIVZERO, GPR0 not set"; 
+                        }else{
+                            quotient = this.GPR0 / this.GPR0;
+                            remainder = this.GPR0 % this.GPR0;
+                        }
+                    }else{
+                        if(this.GPR2 == 0 || this.GPR2 == -1){
+                            conditionCode[3] = 1;
+                            return "DVD: DIVZERO, GPR2 not set";
+                        }else{
+                            quotient = this.GPR0 / this.GPR2;
+                            remainder = this.GPR0 % this.GPR2;
+                        } 
+                    } 
+                    this.GPR0 = quotient;
+                    this.GPR1 = remainder;
+                    return "DVD: quotient in GPR0: " + quotient + " , remainder in GPR1: " + remainder;
+                case 2:
+                    if(gpry == 0){
+                        if(this.GPR0 == 0 || this.GPR0 == -1){
+                            conditionCode[3] = 1;
+                            return "DVD: DIVZERO, GPR0 not set"; 
+                        }else{
+                            quotient = this.GPR2 / this.GPR0;
+                            remainder = this.GPR2 % this.GPR0;
+                        }
+                    }else{
+                        if(this.GPR2 == 0 || this.GPR2 == -1){
+                            conditionCode[3] = 1;
+                            return "DVD: DIVZERO, GPR2 not set";
+                        }else{
+                            quotient = this.GPR2 / this.GPR2;
+                            remainder = this.GPR2 % this.GPR2;
+                        } 
+                    } 
+                    this.GPR2 = quotient;
+                    this.GPR3 = remainder;
+                    return "DVD: quotient in GPR2: " + quotient + " , remainder in GPR3: " + remainder;
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Test register to register equality
+        private String TRR(int gprx, int gpry, int indirect, int address){
+            if(gprx == gpry){
+                this.conditionCode[4] = 1; //gpr == gpr
+                return "TRR: GPR " + gprx + "== GPR" + gpry;
+            }
+            if((gprx == 0 && gpry == 1) || (gprx == 1 && gpry == 0)){
+                if(this.GPR0 == this.GPR1){
+                    this.conditionCode[4] = 1;
+                    return "TRR: GPR0 equals GPR1";
+                }else{
+                    this.conditionCode[4] = 0;
+                    return "TRR: GPR0 not equal GPR1";
+                }
+            }else if((gprx == 0 && gpry == 2) || (gprx == 2 && gpry == 0)){
+                if(this.GPR0 == this.GPR2){
+                    this.conditionCode[4] = 1;
+                    return "TRR: GPR0 equals GPR2";
+                }else{
+                    this.conditionCode[4] = 0;
+                    return "TRR: GPR0 not equal GPR2";
+                }
+            }else if((gprx == 0 && gpry == 3) || (gprx == 3 && gpry == 0)){
+                if(this.GPR0 == this.GPR3){
+                    this.conditionCode[4] = 1;
+                    return "TRR: GPR0 equals GPR3";
+                }else{
+                    this.conditionCode[4] = 0;
+                    return "TRR: GPR0 not equal GPR3";
+                }
+            }else if((gprx == 1 && gpry == 2) || (gprx == 2 && gpry == 1)){
+                if(this.GPR1 == this.GPR2){
+                    this.conditionCode[4] = 1;
+                    return "TRR: GPR1 equals GPR2";
+                }else{
+                    this.conditionCode[4] = 0;
+                    return "TRR: GPR1 not equal GPR2";
+                }
+            }else if((gprx == 1 && gpry == 3) || (gprx == 3 && gpry == 1)){
+                if(this.GPR1 == this.GPR3){
+                    this.conditionCode[4] = 1;
+                    return "TRR: GPR1 equals GPR3";
+                }else{
+                    this.conditionCode[4] = 0;
+                    return "TRR: GPR1 not equal GPR3";
+                }
+            }else if((gprx == 2 && gpry == 3) || (gprx == 3 && gpry == 2)){
+                if(this.GPR2 == this.GPR3){
+                    this.conditionCode[4] = 1;
+                    return "TRR: GPR2 equals GPR3";
+                }else{
+                    this.conditionCode[4] = 0;
+                    return "TRR: GPR2 not equal GPR3";
+                }
+            }else{
+                return "Invalid command";
+            }
+        }
+
+        //Bitwise AND two gprs
+        private String AND(int gprx, int gpry, int indirect, int address){
+            switch (gprx) {
+                case 0:
+                    if(gpry == 1){
+                        this.GPR0 = this.GPR0 & this.GPR1;
+                    }else if(gpry == 2){
+                        this.GPR0 = this.GPR0 & this.GPR2;
+                    }else if(gpry == 3){
+                        this.GPR0 = this.GPR0 & this.GPR3;
+                    }
+                    return "AND: GPR0 set with: " + this.GPR0;
+                case 1: 
+                    if(gpry == 0){
+                        this.GPR1 = this.GPR1 & this.GPR0;
+                    }else if(gpry == 2){
+                        this.GPR1 = this.GPR1 & this.GPR2;
+                    }else if(gpry == 3){
+                        this.GPR1 = this.GPR1 & this.GPR3;
+                    }
+                    return "AND: GPR1 set with: " + this.GPR1;
+                case 2: 
+                    if(gpry == 0){
+                        this.GPR2 = this.GPR2 & this.GPR0;
+                    }else if(gpry == 1){
+                        this.GPR2 = this.GPR2 & this.GPR1;
+                    }else if(gpry == 3){
+                        this.GPR2 = this.GPR2 & this.GPR3;
+                    }
+                    return "AND: GPR2 set with: " + this.GPR2; 
+                case 3: 
+                    if(gpry == 0){
+                        this.GPR3 = this.GPR3 & this.GPR0;
+                    }else if(gpry == 1){
+                        this.GPR3 = this.GPR3 & this.GPR1;
+                    }else if(gpry == 2){
+                        this.GPR3 = this.GPR3 & this.GPR2;
+                    }
+                    return "AND: GPR3 set with: " + this.GPR3; 
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Bitwise OR two gprs
+        private String ORR(int gprx, int gpry, int indirect, int address){
+            switch (gprx) {
+                case 0:
+                    if(gpry == 1){
+                        this.GPR0 = this.GPR0 | this.GPR1;
+                    }else if(gpry == 2){
+                        this.GPR0 = this.GPR0 | this.GPR2;
+                    }else if(gpry == 3){
+                        this.GPR0 = this.GPR0 | this.GPR3;
+                    }
+                    return "ORR: GPR0 set with: " + this.GPR0;
+                case 1: 
+                    if(gpry == 0){
+                        this.GPR1 = this.GPR1 | this.GPR0;
+                    }else if(gpry == 2){
+                        this.GPR1 = this.GPR1 | this.GPR2;
+                    }else if(gpry == 3){
+                        this.GPR1 = this.GPR1 | this.GPR3;
+                    }
+                    return "ORR: GPR1 set with: " + this.GPR1;
+                case 2: 
+                    if(gpry == 0){
+                        this.GPR2 = this.GPR2 | this.GPR0;
+                    }else if(gpry == 1){
+                        this.GPR2 = this.GPR2 | this.GPR1;
+                    }else if(gpry == 3){
+                        this.GPR2 = this.GPR2 | this.GPR3;
+                    }
+                    return "ORR: GPR2 set with: " + this.GPR2; 
+                case 3: 
+                    if(gpry == 0){
+                        this.GPR3 = this.GPR3 | this.GPR0;
+                    }else if(gpry == 1){
+                        this.GPR3 = this.GPR3 | this.GPR1;
+                    }else if(gpry == 2){
+                        this.GPR3 = this.GPR3 | this.GPR2;
+                    }
+                    return "ORR: GPR3 set with: " + this.GPR3; 
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //TODO: Figure out if registers can be set to -1 or if they need to be uninitialized to 0
+        //TODO: Can registers be negative?
+        //Bitwise NOT one gpr
+        private String NOT(int gprx, int gpry, int indirect, int address){
+            switch (gprx) {
+                case 0:
+                    if(this.GPR0!= -1){
+                        this.GPR0 = ~this.GPR0;
+                    }
+                    return "NOT: GPR0: " + this.GPR0;
+                case 1: 
+                    if(this.GPR1!= -1){
+                        this.GPR1 = ~this.GPR1;
+                    }
+                    return "NOT: GPR1: " + this.GPR1;
+                case 2: 
+                    if(this.GPR2!= -1){
+                        this.GPR2 = ~this.GPR2;
+                    }
+                    return "NOT: GPR2: " + this.GPR2;
+                case 3: 
+                    if(this.GPR3!= -1){
+                        this.GPR3 = ~this.GPR3;
+                    }
+                    return "NOT: GPR3: " + this.GPR3;
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
 
         private int computeEffectiveAddress(int ixr, int indirect, int address, boolean ignoreIXR){
             int ea = -1;
@@ -861,22 +1103,22 @@ public class Simulator {
         //helper function to detect over or under flow
         private String detectOverUnder(int register){
             if(register>65535){//overflow
-                this.conditionCode = 0;
+                this.conditionCode[1] = 1;
                 return "OVERFLOW";
             }else if(register < 0){ //underflow
-                this.conditionCode = 1;
+                this.conditionCode[2] = 1;
                 return "UNDERFLOW";
             }else{
                 return "";
             }
         }
 
-        public int getCC(){
+        public int[] getCC(){
             return this.conditionCode;
         }
 
-        public void setCC(int cc){
-            this.conditionCode = cc;
+        public void setCC(int cc, int index){
+            this.conditionCode[index] = cc;
         }
 
         public int getIR(){
