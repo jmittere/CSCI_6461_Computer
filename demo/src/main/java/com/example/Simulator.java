@@ -62,7 +62,7 @@ public class Simulator {
             this.GPR2 = -1;
             this.GPR3 = -1;
             this.IR = -1;
-            this.conditionCode = new int[5]; //[OVERFLOW, UNDERFLOW, DIVZERO, EQUALNOT] 
+            this.conditionCode = new int[4]; //[OVERFLOW, UNDERFLOW, DIVZERO, EQUALNOT] 
             for (int i=0; i<conditionCode.length; i++){
                 this.conditionCode[i] = 0;
             }
@@ -146,13 +146,13 @@ public class Simulator {
             }else{
                 this.registers.put("IR", String.valueOf(this.IR));
             }
-            if(this.conditionCode[1] == 1){
+            if(this.conditionCode[0] == 1){
                 this.registers.put("CC", "OVERFLOW");
-            }else if(this.conditionCode[2] == 1){
+            }else if(this.conditionCode[1] == 1){
                 this.registers.put("CC", "UNDERFLOW");
-            }else if(this.conditionCode[3] == 1){
+            }else if(this.conditionCode[2] == 1){
                 this.registers.put("CC", "DIVZERO");
-            }else if(this.conditionCode[4] == 1){
+            }else if(this.conditionCode[3] == 1){
                 this.registers.put("CC", "EQUALORNOT");
             }  
             this.registers.put("debugOutput", this.debugOutput);
@@ -296,31 +296,155 @@ public class Simulator {
                 case "LDR":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.LDR(contents[0], contents[1], contents[2], contents[3]);
-                    //System.out.println("LDR");
                     break;
                 case "STR":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.STR(contents[0], contents[1], contents[2], contents[3]);
-                    //System.out.println("STR");
                     break;
                 case "LDA":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.LDA(contents[0], contents[1], contents[2], contents[3]);
-                    //System.out.println("LDA");
                     break;
                 case "LDX":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.LDX(contents[0], contents[1], contents[2], contents[3]);
-                    //System.out.println("LDX");
                     break;
                 case "STX":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.STX(contents[0], contents[1], contents[2], contents[3]);
-                    //System.out.println("STX");
                     break;
+                case "AMR":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.AMR(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("AMR");
+                    break;
+                case "SMR":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.SMR(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("SMR");
+                    break;
+                case "AIR":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.AIR(contents[0], contents[3]);
+                    System.out.println("AIR");
+                    break;
+                case "SIR":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.SIR(contents[0], contents[3]);
+                    System.out.println("SIR");
+                    break;
+                case "MLT":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.MLT(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("MLT");
+                    break;
+                case "DVD":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.DVD(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("DVD");
+                    break;
+                case "TRR":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.TRR(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("TRR");
+                    break;
+                case "AND":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.AND(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("AND");
+                    break;
+                case "ORR":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.ORR(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("ORR");
+                    break;
+                case "NOT":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.NOT(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("NOT");
+                    break;
+                case "JZ":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.JZ(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("JZ");
+                    if(debugOutput.contains("PC set with")){//pc already set so return from step here
+                        this.updateMemoryRegisters();
+                        this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                        this.updateRegisters();
+                        return this.registers;
+                    }
+                    break;
+                case "JNE":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.JNE(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("JNE");
+                    if(debugOutput.contains("PC set with")){//pc already set so return from step here
+                        this.updateMemoryRegisters();
+                        this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                        this.updateRegisters();
+                        return this.registers;
+                    }
+                    break;
+                case "JCC":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.JCC(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("JCC");
+                    if(debugOutput.contains("PC set with")){//pc already set so return from step here
+                        this.updateMemoryRegisters();
+                        this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                        this.updateRegisters();
+                        return this.registers;
+                    }
+                    break;  
+                case "JMA":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.JMA(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("JMA");
+                    this.updateMemoryRegisters();
+                    this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                    this.updateRegisters();
+                    return this.registers;
+                case "JSR":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.JSR(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("JSR");
+                    this.updateMemoryRegisters();
+                    this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                    this.updateRegisters();
+                    return this.registers;
+                case "RFS":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.RFS(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("RFS");
+                    this.updateMemoryRegisters();
+                    this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                    this.updateRegisters();
+                    return this.registers;
+                case "SOB":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.SOB(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("SOB");
+                    if(debugOutput.contains("PC set with")){//pc already set so return from step here
+                        this.updateMemoryRegisters();
+                        this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                        this.updateRegisters();
+                        return this.registers;
+                    }
+                    break;  
+                case "JGE":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.JGE(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("JGE");
+                    if(debugOutput.contains("PC set with")){//pc already set so return from step here
+                        this.updateMemoryRegisters();
+                        this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                        this.updateRegisters();
+                        return this.registers;
+                    }
+                    break;  
                 default:
                     this.debugOutput = "ERROR: Invalid Instruction";
-                    //System.out.println("Invalid Command.");
+                    System.out.println("Invalid Command.");
             }
 
             this.PC = this.getAddressOfNextInstruction();
@@ -463,22 +587,17 @@ public class Simulator {
             switch (gpr) {
                 case 0: //load into gpr0
                     this.setGPR0(this.getFromMemory(add));
-                    //System.out.println("GPR0 set with: " + this.getFromMemory(add));
                     return "GPR0 set with: " + this.getFromMemory(add);
                 case 1: //load into gpr1
                     this.setGPR1(this.getFromMemory(add));
-                    //System.out.println("GPR1 set with: " + this.getFromMemory(add));
                     return "GPR1 set with: " + this.getFromMemory(add);
                 case 2: //load into gpr2
                     this.setGPR2(this.getFromMemory(add));
-                    //System.out.println("GPR2 set with: " + this.getFromMemory(add));
                     return "GPR2 set with: " + this.getFromMemory(add);
                 case 3: //load into gpr3
                     this.setGPR3(this.getFromMemory(add));
-                    //System.out.println("GPR3 set with: " + this.getFromMemory(add));
                     return "GPR3 set with: " + this.getFromMemory(add);
                 default:
-                    //System.out.println("Invalid command");
                     return "Invalid command";
             }
         }
@@ -489,22 +608,17 @@ public class Simulator {
             switch (gpr) {
                 case 0: //store gpr0 to memory
                     this.memory.put(add, this.GPR0);
-                    //System.out.println("GPR0: " + this.GPR0 + " stored at: " + add);
                     return "GPR0: " + this.GPR0 + " stored at: " + add;
                 case 1: //store gpr1 to memory
                     this.memory.put(add, this.GPR1);
-                    //System.out.println("GPR1: " + this.GPR1 + " stored at: " + add);
                     return "GPR1: " + this.GPR1 + " stored at: " + add;
                 case 2: //store gpr2 to memory
                     this.memory.put(add, this.GPR2);
-                    //System.out.println("GPR2: " + this.GPR2 + " stored at: " + add);
                     return "GPR2: " + this.GPR2 + " stored at: " + add;
                 case 3: //store gpr3 to memory
                     this.memory.put(add, this.GPR3);
-                    //System.out.println("GPR3: " + this.GPR3 + " stored at: " + add);
                     return "GPR3: " + this.GPR3 + " stored at: " + add;
                 default:
-                    //System.out.println("Invalid command");
                     return "Invalid command";
             }
         }
@@ -515,22 +629,17 @@ public class Simulator {
             switch (gpr) {
                 case 0: //load into gpr0
                     this.setGPR0(add);
-                    //System.out.println("GPR0 set with: " + add);
                     return "GPR0 set with: " + add;
                 case 1: //load into gpr1
                     this.setGPR1(add);
-                    //System.out.println("GPR1 set with: " + add);
                     return "GPR1 set with: " + add;
                 case 2: //load into gpr2
                     this.setGPR2(add);
-                    //System.out.println("GPR2 set with: " + add);
                     return "GPR2 set with: " + add;
                 case 3: //load into gpr3
                     this.setGPR3(add);
-                    //System.out.println("GPR3 set with: " + add);
                     return "GPR3 set with: " + add;
                 default:
-                    //System.out.println("Invalid command");
                     return "Invalid command";
             }
         }
@@ -541,18 +650,14 @@ public class Simulator {
             switch (ixr) {
                 case 1: //load into ixr1
                     this.setIXR1(this.getFromMemory(add));
-                    //System.out.println("IXR1 set with: " + this.getFromMemory(add));
                     return "IXR1 set with: " + this.getFromMemory(add);
                 case 2: //load into ixr2
                     this.setIXR2(this.getFromMemory(add));
-                    //System.out.println("IXR2 set with: " + this.getFromMemory(add));
                     return "IXR2 set with: " + this.getFromMemory(add);
                 case 3: //load into ixr3
                     this.setIXR3(this.getFromMemory(add));
-                    //System.out.println("IXR3 set with: " + this.getFromMemory(add));
                     return "IXR3 set with: " + this.getFromMemory(add);
                 default:
-                    //System.out.println("Invalid command");
                     return "Invalid command";
             }
         }
@@ -563,15 +668,12 @@ public class Simulator {
             switch (ixr) {
                 case 1: //store ixr1 to memory
                     this.memory.put(add, this.IXR1);
-                    //System.out.println("IXR1: " + this.IXR1 + " stored at: " + add);
                     return "IXR1: " + this.IXR1 + " stored at: " + add;
                 case 2: //store ixr2 to memory
                     this.memory.put(add, this.IXR2);
-                    //System.out.println("IXR2: " + this.IXR2 + " stored at: " + add);
                     return "IXR2: " + this.IXR2 + " stored at: " + add;
                 case 3: //store ixr3 to memory
                     this.memory.put(add, this.IXR3);
-                    //System.out.println("IXR3: " + this.IXR3 + " stored at: " + add);
                     return "IXR3: " + this.IXR3 + " stored at: " + add;
                 default:
                     //System.out.println("Invalid command");
@@ -700,82 +802,6 @@ public class Simulator {
             }
         }
 
-        //Jump if Zero
-        private String JZ(int gpr, int ixr, int indirect, int address){
-            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
-            switch (gpr) {
-                case 0: 
-                    if(this.GPR0 == 0){
-                        this.PC = add;
-                        return "JZ: PC set with: " + this.PC;
-                    }else{
-                        return "JZ: GPR0" + this.GPR0 + " Not equal to zero";
-                    }
-                case 1: 
-                    if(this.GPR1 == 0){
-                        this.PC = add;
-                        return "JZ: PC set with: " + this.PC;
-                    }else{
-                        return "JZ: GPR1" + this.GPR1 + " Not equal to zero";
-                    }
-                case 2: 
-                    if(this.GPR2 == 0){
-                        this.PC = add;
-                        return "JZ: PC set with: " + this.PC;
-                    }else{
-                        return "JZ: GPR2" + this.GPR2 + " Not equal to zero";
-                    }
-                case 3: 
-                    if(this.GPR3 == 0){
-                        this.PC = add;
-                        return "JZ: PC set with: " + this.PC;
-                    }else{
-                        return "JZ: GPR3" + this.GPR3 + " Not equal to zero";
-                    }
-                default:
-                    //System.out.println("Invalid command");
-                    return "Invalid command";
-            }
-        }
-
-        //Jump IF register uninitialized or zero
-        private String JNE(int gpr, int ixr, int indirect, int address){
-            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
-            switch (gpr) {
-                case 0: 
-                    if(this.GPR0 > 0){
-                        this.PC = add;
-                        return "JNE: PC set with: " + this.PC;
-                    }else{
-                        return "JNE: GPR0" + this.GPR0 + " equals zero";
-                    }
-                case 1: 
-                    if(this.GPR1 > 0){
-                        this.PC = add;
-                        return "JNE: PC set with: " + this.PC;
-                    }else{
-                        return "JNE: GPR1" + this.GPR1 + " equals zero";
-                    }
-                case 2: 
-                    if(this.GPR2 > 0){
-                        this.PC = add;
-                        return "JNE: PC set with: " + this.PC;
-                    }else{
-                        return "JNE: GPR2" + this.GPR2 + " equals zero";
-                    }
-                case 3: 
-                    if(this.GPR3 > 0){
-                        this.PC = add;
-                        return "JNE: PC set with: " + this.PC;
-                    }else{
-                        return "JNE: GPR3" + this.GPR3 + " equals zero";
-                    }
-                default:
-                    //System.out.println("Invalid command");
-                    return "Invalid command";
-            }
-        }
-
         //MULTIPLY AND DIVIDE INSTRUCTIONS//
         //Multiply values in two gprs
         private String MLT(int gprx, int gpry, int indirect, int address){
@@ -828,7 +854,7 @@ public class Simulator {
                 case 0:
                     if(gpry == 0){
                         if(this.GPR0 == 0 || this.GPR0 == -1){
-                            conditionCode[3] = 1;
+                            conditionCode[2] = 1;
                             return "DVD: DIVZERO, GPR0 not set"; 
                         }else{
                             quotient = this.GPR0 / this.GPR0;
@@ -836,7 +862,7 @@ public class Simulator {
                         }
                     }else{
                         if(this.GPR2 == 0 || this.GPR2 == -1){
-                            conditionCode[3] = 1;
+                            conditionCode[2] = 1;
                             return "DVD: DIVZERO, GPR2 not set";
                         }else{
                             quotient = this.GPR0 / this.GPR2;
@@ -849,7 +875,7 @@ public class Simulator {
                 case 2:
                     if(gpry == 0){
                         if(this.GPR0 == 0 || this.GPR0 == -1){
-                            conditionCode[3] = 1;
+                            conditionCode[2] = 1;
                             return "DVD: DIVZERO, GPR0 not set"; 
                         }else{
                             quotient = this.GPR2 / this.GPR0;
@@ -857,7 +883,7 @@ public class Simulator {
                         }
                     }else{
                         if(this.GPR2 == 0 || this.GPR2 == -1){
-                            conditionCode[3] = 1;
+                            conditionCode[2] = 1;
                             return "DVD: DIVZERO, GPR2 not set";
                         }else{
                             quotient = this.GPR2 / this.GPR2;
@@ -876,55 +902,55 @@ public class Simulator {
         //Test register to register equality
         private String TRR(int gprx, int gpry, int indirect, int address){
             if(gprx == gpry){
-                this.conditionCode[4] = 1; //gpr == gpr
+                this.conditionCode[3] = 1; //gpr == gpr
                 return "TRR: GPR " + gprx + "== GPR" + gpry;
             }
             if((gprx == 0 && gpry == 1) || (gprx == 1 && gpry == 0)){
                 if(this.GPR0 == this.GPR1){
-                    this.conditionCode[4] = 1;
+                    this.conditionCode[3] = 1;
                     return "TRR: GPR0 equals GPR1";
                 }else{
-                    this.conditionCode[4] = 0;
+                    this.conditionCode[3] = 0;
                     return "TRR: GPR0 not equal GPR1";
                 }
             }else if((gprx == 0 && gpry == 2) || (gprx == 2 && gpry == 0)){
                 if(this.GPR0 == this.GPR2){
-                    this.conditionCode[4] = 1;
+                    this.conditionCode[3] = 1;
                     return "TRR: GPR0 equals GPR2";
                 }else{
-                    this.conditionCode[4] = 0;
+                    this.conditionCode[3] = 0;
                     return "TRR: GPR0 not equal GPR2";
                 }
             }else if((gprx == 0 && gpry == 3) || (gprx == 3 && gpry == 0)){
                 if(this.GPR0 == this.GPR3){
-                    this.conditionCode[4] = 1;
+                    this.conditionCode[3] = 1;
                     return "TRR: GPR0 equals GPR3";
                 }else{
-                    this.conditionCode[4] = 0;
+                    this.conditionCode[3] = 0;
                     return "TRR: GPR0 not equal GPR3";
                 }
             }else if((gprx == 1 && gpry == 2) || (gprx == 2 && gpry == 1)){
                 if(this.GPR1 == this.GPR2){
-                    this.conditionCode[4] = 1;
+                    this.conditionCode[3] = 1;
                     return "TRR: GPR1 equals GPR2";
                 }else{
-                    this.conditionCode[4] = 0;
+                    this.conditionCode[3] = 0;
                     return "TRR: GPR1 not equal GPR2";
                 }
             }else if((gprx == 1 && gpry == 3) || (gprx == 3 && gpry == 1)){
                 if(this.GPR1 == this.GPR3){
-                    this.conditionCode[4] = 1;
+                    this.conditionCode[3] = 1;
                     return "TRR: GPR1 equals GPR3";
                 }else{
-                    this.conditionCode[4] = 0;
+                    this.conditionCode[3] = 0;
                     return "TRR: GPR1 not equal GPR3";
                 }
             }else if((gprx == 2 && gpry == 3) || (gprx == 3 && gpry == 2)){
                 if(this.GPR2 == this.GPR3){
-                    this.conditionCode[4] = 1;
+                    this.conditionCode[3] = 1;
                     return "TRR: GPR2 equals GPR3";
                 }else{
-                    this.conditionCode[4] = 0;
+                    this.conditionCode[3] = 0;
                     return "TRR: GPR2 not equal GPR3";
                 }
             }else{
@@ -1053,6 +1079,179 @@ public class Simulator {
             }
         }
 
+        //Transfer Instructions//
+        //Jump if register equals zero
+         private String JZ(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            switch (gpr) {
+                case 0: 
+                    if(this.GPR0 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR0" + this.GPR0 + " Not equal to zero";
+                    }
+                case 1: 
+                    if(this.GPR1 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR1" + this.GPR1 + " Not equal to zero";
+                    }
+                case 2: 
+                    if(this.GPR2 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR2" + this.GPR2 + " Not equal to zero";
+                    }
+                case 3: 
+                    if(this.GPR3 == 0){
+                        this.PC = add;
+                        return "JZ: PC set with: " + this.PC;
+                    }else{
+                        return "JZ: GPR3" + this.GPR3 + " Not equal to zero";
+                    }
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Jump if register not equal to zero or initialized
+        private String JNE(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            switch (gpr) {
+                case 0: 
+                    if(this.GPR0 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR0" + this.GPR0 + " equals zero";
+                    }
+                case 1: 
+                    if(this.GPR1 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR1" + this.GPR1 + " equals zero";
+                    }
+                case 2: 
+                    if(this.GPR2 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR2" + this.GPR2 + " equals zero";
+                    }
+                case 3: 
+                    if(this.GPR3 > 0){
+                        this.PC = add;
+                        return "JNE: PC set with: " + this.PC;
+                    }else{
+                        return "JNE: GPR3" + this.GPR3 + " equals zero";
+                    }
+                default:
+                    //System.out.println("Invalid command");
+                    return "Invalid command";
+            }
+        }
+
+        //Jump if CC bit equals bit specified
+        private String JCC(int cc, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            if(this.conditionCode[cc] == 1){ //cc should be 0,1,2,3
+                this.PC = add;
+                return "JCC: PC set with: " + this.PC;
+            }else{
+                return "JCC: PC not set in JCC";
+            }
+        }
+
+        //Unconditional Jump to address
+        private String JMA(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            this.PC = add;
+            return "JMA: PC set with: " + this.PC;
+        }
+
+        //Jump and save next address in R3, R0 should contain pointer to args\
+        //TODO: R0 should contain pointer to arguments Argument list should end with –1 (all 1s) value??
+        private String JSR(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            this.GPR3 = this.PC + 1;
+            this.PC = add;
+            return "JSR: PC set with: " + this.PC + " and GPR3 set with" + this.GPR3;
+        }
+
+        //Return from Subroutine
+        private String RFS(int gpr, int ixr, int indirect, int immed){
+            this.GPR0 = immed;
+            this.PC = this.GPR3;
+            return "RFS: PC set with: " + this.PC + " and GPR0 set with" + this.GPR0;
+        }
+
+        //Subtract one from register then branch
+        private String SOB(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            if(gpr == 0){
+                this.GPR0 = this.GPR0 - 1;
+                if(this.GPR0 > 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else if(gpr == 1){
+                this.GPR1 = this.GPR1 - 1;
+                if(this.GPR1 > 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else if(gpr == 2){
+                this.GPR2 = this.GPR2 - 1;
+                if(this.GPR2 > 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else if(gpr == 3){
+                this.GPR3 = this.GPR3 - 1;
+                if(this.GPR3 > 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else{
+                return "Invalid command";
+            }
+            return "SOB: no branch";
+        }
+
+        //Jump if register greater than or equal to zero
+        private String JGE(int gpr, int ixr, int indirect, int address){
+            int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            if(gpr == 0){
+                if(this.GPR0 >= 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else if(gpr == 1){
+                if(this.GPR1 >= 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else if(gpr == 2){
+                if(this.GPR2 >= 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else if(gpr == 3){
+                if(this.GPR3 >= 0){
+                    this.PC = add;
+                    return "SOB: PC set with: " + this.PC;
+                }
+            }else{
+                return "Invalid command";
+            }
+            return "JGE: no jump";
+        }
+
         private int computeEffectiveAddress(int ixr, int indirect, int address, boolean ignoreIXR){
             int ea = -1;
             if(ignoreIXR){ //LDX or STX instruction
@@ -1081,9 +1280,7 @@ public class Simulator {
                 }else{
                     System.out.println("Invalid IXR");
                 }
-
             }
-            
 
             if(indirect == 1){
                 ea = getFromMemory(ea);
@@ -1103,10 +1300,10 @@ public class Simulator {
         //helper function to detect over or under flow
         private String detectOverUnder(int register){
             if(register>65535){//overflow
-                this.conditionCode[1] = 1;
+                this.conditionCode[0] = 1;
                 return "OVERFLOW";
             }else if(register < 0){ //underflow
-                this.conditionCode[2] = 1;
+                this.conditionCode[1] = 1;
                 return "UNDERFLOW";
             }else{
                 return "";
