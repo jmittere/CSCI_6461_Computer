@@ -235,6 +235,7 @@ public class ComputerGUI extends Application {
             fieldMap.get("MFR").setText(registerContents.get("MFR"));
             fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
+            cacheOutput.setText(registerContents.get("cache"));
         });
         btnStep.setOnAction(e -> {
             HashMap<String, String> registerContents = this.sim.step(); //register contents returns a hashmap of all register contents after step()
@@ -251,11 +252,12 @@ public class ComputerGUI extends Application {
             fieldMap.get("MFR").setText(registerContents.get("MFR"));
             fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
+            cacheOutput.setText(registerContents.get("cache"));
         });
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
         btnIPL.setOnAction(e -> {
             String pf = fieldMap.get("Program File").getText();
-            //System.out.println("Program File Path: " + pf);
+            System.out.println("Program File Path: " + pf);
             if(pf.equals("")){ //use hardcoded preloaded file
                 pf = "preload.txt";
             }

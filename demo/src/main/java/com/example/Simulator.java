@@ -158,6 +158,7 @@ public class Simulator {
                 this.registers.put("CC", "");
             }  
             this.registers.put("debugOutput", this.debugOutput);
+            this.registers.put("cache", this.cache.DisplayCacheBlocks());
         }
 
 
@@ -225,7 +226,7 @@ public class Simulator {
                     val = deadBlock.getValue();        
                     if(addr < 6 || addr > 2047){
                         System.out.println("Error storing during write back...");
-                    }else if(val < -32768 || val > 32768){
+                    }else if(val < -32768 || val > 32767){
                         System.out.println("Error storing during write back...");
                     }else{
                         this.memory.put(addr, val); //write back
@@ -282,9 +283,16 @@ public class Simulator {
                 return this.registers;
             }
 
+            int bitWidth = 16; //16, Mask to extract only the lower `bitWidth` bits
+            
             String binaryInstruction = Conversion.convertToBinaryString(instr, 16); //gets the binary equivalent of the instruction stored at memory location of PC
             String opCodeBinaryString = binaryInstruction.substring(0, 6);
             String opCode = this.opCodes.get(opCodeBinaryString);
+            String binaryStr = String.format("%" + bitWidth + "s", Integer.toBinaryString(instr & ((1 << bitWidth) - 1))).replace(' ', '0');
+            System.out.println("BinaryIns: " + binaryStr);
+            //System.out.println("binaryIns: " + binaryInstruction);
+            //System.out.println("opCodeBinaryString: " +opCodeBinaryString);
+            //System.out.println("OpCode: " + opCode);
             if(opCode == null){
                 //System.out.println("Opcode null");
                 this.PC = this.getAddressOfNextInstruction();
@@ -445,6 +453,8 @@ public class Simulator {
                     }
                     break;  
                 default:
+                    //System.out.println("OpCode: " + opCode);
+                    //System.out.println("BinaryIns: " + binaryInstruction);
                     this.debugOutput = "ERROR: Invalid Instruction";
                     System.out.println("Invalid Command.");
             }
@@ -486,14 +496,14 @@ public class Simulator {
 
         //reads each line in the loadfile and puts it into loadFile array
         private boolean readLoadFile(){
-            //System.out.println("Program File: " + this.programFile);
+            System.out.println("Program File: " + this.programFile);
             try (Scanner scanner = new Scanner(new File(this.programFile))) {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     this.loadFile.add(line);
                 }
+                System.out.println("Finished Loading Load File");
             } catch (FileNotFoundException err) {
-                //System.err.println("File not found: " + e.getMessage());
                 try (InputStream input = getClass().getClassLoader().getResourceAsStream(this.programFile)) {
                 if (input == null) {
                     System.out.println("File not found!");
@@ -528,22 +538,30 @@ public class Simulator {
             for (String line : this.loadFile) {
                 String[] words = line.split("\\s+"); //splits by any number of spaces
                 if (words.length>2){
-                    //System.out.println("Incorrect Load File");
+                    System.out.println("Incorrect Load File");
                     return false;
                 }
 
                 String address = words[0];
                 if(Conversion.convertToDecimal(address) < 6 || Conversion.convertToDecimal(address) > 2047){
-                    //System.out.println("ERROR: Cannot store in memory over 2047");
+                    System.out.println("ERROR: Cannot store in memory over 2047");
                     return false;
                 }
                 String instruction = words[1];
-                int num = Conversion.convertToDecimal(instruction);
-                if(num < -32768 || num > 32768){
-                    //System.out.println("ERROR: Cannot store a value over 32768 or less than -32768");
+                int num = Integer.parseInt(words[1], 8);
+                String binaryInst = Conversion.convertToBinaryString(num, 16);
+                System.out.println("BinaryInst: " + binaryInst);
+                if (binaryInst.charAt(0) == '1') {
+                    num -= (1 << 16); // Subtract 2^bitWidth to get the correct negative value
+                }
+                System.out.println("Num: " + num);
+                if(num < -32768 || num > 32767){
+                    System.out.println("Inst: " + instruction);
+                    System.out.println("Num: "+ num);
+                    System.out.println("ERROR: Cannot store a value over 32767 or less than -32768");
                     return false;
                 }else{
-                    this.memory.put(Conversion.convertToDecimal(address), Conversion.convertToDecimal(instruction));
+                    this.memory.put(Conversion.convertToDecimal(address), num);
                 }
             }
             this.printMemory();
@@ -563,7 +581,7 @@ public class Simulator {
 
             if(address < 6 || address > 2047){
                 return false;
-            }else if(value < -32768 || value > 32768){
+            }else if(value < -32768 || value > 32767){
                 return false;
             }else{
                 this.memory.put(address, value);
@@ -575,7 +593,7 @@ public class Simulator {
         //returns false if failed to initalize with loadFile
         public boolean initializeProgram(){
             boolean res;
-            if(programFile == ""){
+            if(this.programFile == ""){
                 return false;
             }else{
                 res = this.readLoadFile();
@@ -1301,10 +1319,10 @@ public class Simulator {
     
         //helper function to detect over or under flow
         private String detectOverUnder(int register){
-            if(register > 32768){//overflow
+            if(register > 32767){//overflow
                 this.conditionCode[0] = 1;
                 return "OVERFLOW";
-            }else if(register < -32769){ //underflow
+            }else if(register < -32768){ //underflow
                 this.conditionCode[1] = 1;
                 return "UNDERFLOW";
             }else{
