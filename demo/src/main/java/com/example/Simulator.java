@@ -57,22 +57,22 @@ public class Simulator {
 
         // Constructor
         public Simulator() {
-            this.GPR0 = -1;
-            this.GPR1 = -1;
-            this.GPR2 = -1;
-            this.GPR3 = -1;
-            this.IR = -1;
+            this.GPR0 = -32769;
+            this.GPR1 = -32769;
+            this.GPR2 = -32769;
+            this.GPR3 = -32769;
+            this.IR = -32769;
             this.conditionCode = new int[4]; //[OVERFLOW, UNDERFLOW, DIVZERO, EQUALNOT] 
             for (int i=0; i<conditionCode.length; i++){
                 this.conditionCode[i] = 0;
             }
-            this.IXR1 = -1;
-            this.IXR2 = -1;
-            this.IXR3 = -1;
-            this.PC = -1;
-            this.MAR = -1;
-            this.MBR = -1;
-            this.MFR = -1;
+            this.IXR1 = -32769;
+            this.IXR2 = -32769;
+            this.IXR3 = -32769;
+            this.PC = -32769;
+            this.MAR = -32769;
+            this.MBR = -32769;
+            this.MFR = -32769;
             this.debugOutput = "";
             this.programFile = "";
             this.loadFile = new ArrayList<>();
@@ -86,62 +86,62 @@ public class Simulator {
         //updates hashmap that has contents of each register
         //must run this function before returning values to the frontend
         private void updateRegisters(){
-            if(this.GPR0 == -1){
+            if(this.GPR0 == -32769){
                 this.registers.put("GPR0", "");
             }else{
                 this.registers.put("GPR0", String.valueOf(this.GPR0));
             }
-            if(this.GPR1 == -1){
+            if(this.GPR1 == -32769){
                 this.registers.put("GPR1", "");
             }else{
                 this.registers.put("GPR1", String.valueOf(this.GPR1));
             }
-            if(this.GPR2 == -1){
+            if(this.GPR2 == -32769){
                 this.registers.put("GPR2", "");
             }else{
                 this.registers.put("GPR2", String.valueOf(this.GPR2));
             }
-            if(this.GPR3 == -1){
+            if(this.GPR3 == -32769){
                 this.registers.put("GPR3", "");
             }else{
                 this.registers.put("GPR3", String.valueOf(this.GPR3));
             }
-            if(this.IXR1 == -1){
+            if(this.IXR1 == -32769){
                 this.registers.put("IXR1", "");
             }else{
                 this.registers.put("IXR1", String.valueOf(this.IXR1));
             }
-            if(this.IXR2 == -1){
+            if(this.IXR2 == -32769){
                 this.registers.put("IXR2", "");
             }else{
                 this.registers.put("IXR2", String.valueOf(this.IXR2));
             }
-            if(this.IXR3 == -1){
+            if(this.IXR3 == -32769){
                 this.registers.put("IXR3", "");
             }else{
                 this.registers.put("IXR3", String.valueOf(this.IXR3));
             }
-            if(this.PC == -1){
+            if(this.PC == -32769){
                 this.registers.put("PC", "");
             }else{
                 this.registers.put("PC", String.valueOf(this.PC));
             }
-            if(this.MAR == -1){
+            if(this.MAR == -32769){
                 this.registers.put("MAR", "");
             }else{
                 this.registers.put("MAR", String.valueOf(this.MAR));
             }
-            if(this.MBR == -1){
+            if(this.MBR == -32769){
                 this.registers.put("MBR", "");
             }else{
                 this.registers.put("MBR", String.valueOf(this.MBR));
             }
-            if(this.MFR == -1){
+            if(this.MFR == -32769){
                 this.registers.put("MFR", "");
             }else{
                 this.registers.put("MFR", String.valueOf(this.MFR));
             }
-            if(this.IR == -1){
+            if(this.IR == -32769){
                 this.registers.put("IR", "");
             }else{
                 this.registers.put("IR", String.valueOf(this.IR));
@@ -154,6 +154,8 @@ public class Simulator {
                 this.registers.put("CC", "DIVZERO");
             }else if(this.conditionCode[3] == 1){
                 this.registers.put("CC", "EQUALORNOT");
+            }else{
+                this.registers.put("CC", "");
             }  
             this.registers.put("debugOutput", this.debugOutput);
         }
@@ -223,7 +225,7 @@ public class Simulator {
                     val = deadBlock.getValue();        
                     if(addr < 6 || addr > 2047){
                         System.out.println("Error storing during write back...");
-                    }else if(val < 0 || val > 65535){
+                    }else if(val < -32768 || val > 32768){
                         System.out.println("Error storing during write back...");
                     }else{
                         this.memory.put(addr, val); //write back
@@ -259,12 +261,12 @@ public class Simulator {
         //should error if pc is not set
         //should also increment pc after each instruction
         public HashMap<String, String> step(){
-            if(this.PC == -1){
+            if(this.PC == -32769){
                 //System.out.println("Cannot step without setting PC...");
                 this.debugOutput = "ERROR: Cannot step without setting PC";
                 this.updateRegisters();
                 return this.registers;
-            } else if(this.PC > 4095){
+            } else if(this.PC > 2047){
                 //System.out.println("PC: Memory out of bounds");
                 this.debugOutput = "ERROR: PC Memory out of bounds";
                 this.updateRegisters();
@@ -537,8 +539,8 @@ public class Simulator {
                 }
                 String instruction = words[1];
                 int num = Conversion.convertToDecimal(instruction);
-                if(num<0 || num>65535){
-                    //System.out.println("ERROR: Cannot store a value over 65535 or less than 0");
+                if(num < -32768 || num > 32768){
+                    //System.out.println("ERROR: Cannot store a value over 32768 or less than -32768");
                     return false;
                 }else{
                     this.memory.put(Conversion.convertToDecimal(address), Conversion.convertToDecimal(instruction));
@@ -561,7 +563,7 @@ public class Simulator {
 
             if(address < 6 || address > 2047){
                 return false;
-            }else if(value < 0 || value > 65535){
+            }else if(value < -32768 || value > 32768){
                 return false;
             }else{
                 this.memory.put(address, value);
@@ -733,28 +735,28 @@ public class Simulator {
         private String AIR(int gpr, int immediate){            
             switch (gpr) {
                 case 0: //add immediate to contents of Gpr0
-                    if (this.GPR0==-1){
+                    if (this.GPR0==-32769){//uninitialized gpr
                         this.GPR0 = immediate;
                     }else{
                         this.GPR0 = this.GPR0 + immediate;
                     }
                     return immediate + " added to GPR0 which is now: " + this.GPR0 + "\n" + this.detectOverUnder(this.GPR0);
                 case 1: //add immediate to contents of Gpr0
-                    if (this.GPR1==-1){
+                    if (this.GPR1==-32769){
                         this.GPR1 = immediate;
                     }else{
                         this.GPR1 = this.GPR1 + immediate;
                     }
                     return immediate + " added to GPR1 which is now: " + this.GPR1 + "\n" + this.detectOverUnder(this.GPR1);
                 case 2: //add immediate to contents of Gpr0
-                    if (this.GPR2==-1){
+                    if (this.GPR2==-32769){
                         this.GPR2 = immediate;
                     }else{
                         this.GPR2 = this.GPR2 + immediate;
                     }
                     return immediate + " added to GPR2 which is now: " + this.GPR2 + "\n" + this.detectOverUnder(this.GPR2);
                 case 3: //add immediate to contents of Gpr0
-                    if (this.GPR3==-1){
+                    if (this.GPR3==-32769){
                         this.GPR3 = immediate;
                     }else{
                         this.GPR3 = this.GPR3 + immediate;
@@ -769,28 +771,28 @@ public class Simulator {
         private String SIR(int gpr, int immediate){
             switch (gpr) {
                 case 0: //subtract immediate from contents of Gpr0
-                    if (this.GPR0==-1){
+                    if (this.GPR0==-32769){
                         this.GPR0 = immediate*-1;
                     }else{
                         this.GPR0 = this.GPR0 - immediate;
                     }
                     return immediate + " subtracted from GPR0 which is now: " + this.GPR0 + "\n" + this.detectOverUnder(this.GPR0);
                 case 1: //subtract immediate from contents of Gpr1
-                    if (this.GPR1==-1){
+                    if (this.GPR1==-32769){
                         this.GPR1 = immediate*-1;
                     }else{
                         this.GPR1 = this.GPR1 - immediate;
                     }
                     return immediate + " subtracted from GPR1 which is now: " + this.GPR1 + "\n" + this.detectOverUnder(this.GPR1);
                 case 2: //subtract immediate from contents of Gpr2
-                    if (this.GPR2==-1){
+                    if (this.GPR2==-32769){
                         this.GPR2 = immediate*-1;
                     }else{
                         this.GPR2 = this.GPR2 - immediate;
                     }
                     return immediate + " subtracted from GPR2 which is now: " + this.GPR2 + "\n" + this.detectOverUnder(this.GPR2);
                 case 3: //subtract immediate from contents of Gpr3
-                    if (this.GPR3==-1){
+                    if (this.GPR3==-32769){
                         this.GPR3 = immediate*-1;
                     }else{
                         this.GPR3 = this.GPR3 - immediate;
@@ -1054,22 +1056,22 @@ public class Simulator {
         private String NOT(int gprx, int gpry, int indirect, int address){
             switch (gprx) {
                 case 0:
-                    if(this.GPR0!= -1){
+                    if(this.GPR0!= -32769){
                         this.GPR0 = ~this.GPR0;
                     }
                     return "NOT: GPR0: " + this.GPR0;
                 case 1: 
-                    if(this.GPR1!= -1){
+                    if(this.GPR1!= -32769){
                         this.GPR1 = ~this.GPR1;
                     }
                     return "NOT: GPR1: " + this.GPR1;
                 case 2: 
-                    if(this.GPR2!= -1){
+                    if(this.GPR2!= -32769){
                         this.GPR2 = ~this.GPR2;
                     }
                     return "NOT: GPR2: " + this.GPR2;
                 case 3: 
-                    if(this.GPR3!= -1){
+                    if(this.GPR3!= -32769){
                         this.GPR3 = ~this.GPR3;
                     }
                     return "NOT: GPR3: " + this.GPR3;
@@ -1299,10 +1301,10 @@ public class Simulator {
     
         //helper function to detect over or under flow
         private String detectOverUnder(int register){
-            if(register>65535){//overflow
+            if(register > 32768){//overflow
                 this.conditionCode[0] = 1;
                 return "OVERFLOW";
-            }else if(register < 0){ //underflow
+            }else if(register < -32769){ //underflow
                 this.conditionCode[1] = 1;
                 return "UNDERFLOW";
             }else{
