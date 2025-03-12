@@ -183,6 +183,8 @@ public class ComputerGUI extends Application {
         Button btnIPL = new Button("IPL");
         btnIPL.setEffect(shadow);
         btnIPL.setStyle("-fx-background-color: red; -fx-text-fill: white;");
+        Button btnEnter = new Button("Enter");
+        btnEnter.setEffect(shadow);
 
         btnLoad.setOnAction(e -> {
             if(!MARField.getText().equals("")){ //MAR text box is filled in
@@ -273,6 +275,56 @@ public class ComputerGUI extends Application {
                 debugOutput.setText("Successfully initialized with load file: " + pf);
                 btnIPL.setStyle("-fx-background-color: green; -fx-text-fill: white;");
             }
+        });
+
+        btnEnter.setOnAction(e -> {
+            //get contents of console input, should be a string decimal value
+            HashMap<String, String> registerContents = null;
+            if(debugOutput.getText().contains("waiting for input")){
+                String inputVal = consoleInput.getText();
+                int num = 0;
+                try {
+                    num = Integer.parseInt(inputVal);
+                    //System.out.println("Converted number: " + number);
+                } catch (NumberFormatException numExc) {
+                    System.out.println("Error: Invalid number format. Cannot convert to integer.");
+                    debugOutput.setText("Error: Invalid number format. Cannot convert to integer.");
+                    return;
+                } catch (Exception catchAllExc) { // Catches any other unexpected exceptions
+                    System.out.println("An unexpected error occurred: " + catchAllExc.getMessage());
+                    debugOutput.setText("An unexpected error occurred: " + catchAllExc.getMessage());
+                    return;
+                }
+                if(debugOutput.getText().contains("GPR0")){ //Input will be stored in GPR0
+                    registerContents = this.sim.advanceAfterUserInput(0, num);
+                }else if(debugOutput.getText().contains("GPR1")){ //Input will be stored in GPR1
+                    registerContents = this.sim.advanceAfterUserInput(1, num);
+                }else if(debugOutput.getText().contains("GPR2")){ //Input will be stored in GPR2
+                    registerContents = this.sim.advanceAfterUserInput(2, num);
+                }else if(debugOutput.getText().contains("GPR3")){ //Input will be stored in GPR3
+                    registerContents = this.sim.advanceAfterUserInput(3, num);
+                }
+            }else{
+                debugOutput.setText("Program is not waiting for input. Nothing to store");
+                return ; 
+            }
+            consoleInput.setText("");
+            gpr0Field.setText(registerContents.get("GPR0"));
+            gpr1Field.setText(registerContents.get("GPR1"));
+            gpr2Field.setText(registerContents.get("GPR2"));
+            gpr3Field.setText(registerContents.get("GPR3"));
+            ixr1Field.setText(registerContents.get("IXR1"));
+            ixr2Field.setText(registerContents.get("IXR2"));
+            ixr3Field.setText(registerContents.get("IXR3"));
+            PCField.setText(registerContents.get("PC"));
+            MARField.setText(registerContents.get("MAR"));
+            MBRField.setText(registerContents.get("MBR"));
+            fieldMap.get("MFR").setText(registerContents.get("MFR"));
+            fieldMap.get("IR").setText(registerContents.get("IR"));
+            debugOutput.setText(registerContents.get("debugOutput"));
+            cacheOutput.setText(registerContents.get("cache"));
+            fieldMap.get("CC").setText(registerContents.get("CC"));
+            printerOutput.setText(registerContents.get("consolePrinter"));
         });
 
         //general purpose register buttons
@@ -670,7 +722,7 @@ public class ComputerGUI extends Application {
         });
 
 
-        HBox buttonBox = new HBox(10, btnLoad, btnStore, btnRun, btnStep, btnHalt, btnIPL);
+        HBox buttonBox = new HBox(10, btnLoad, btnStore, btnRun, btnStep, btnHalt, btnEnter, btnIPL);
         VBox centerBox = new VBox(10, grid, buttonBox);
         root.setCenter(centerBox);
         

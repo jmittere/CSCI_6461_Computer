@@ -466,7 +466,15 @@ public class Simulator {
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.OUT(contents[0], contents[1], contents[2], contents[3]);
                     System.out.println("OUT");
-                    break; 
+                    break;
+                case "IN":
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.IN(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("IN");
+                    this.updateMemoryRegisters();
+                    this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                    this.updateRegisters();
+                    return this.registers;
                 case "SRC": 
                     contents = this.parseShiftRotate(binaryInstruction);
                     this.debugOutput = this.SRC(contents[0], contents[1], contents[2], contents[3]);
@@ -504,6 +512,37 @@ public class Simulator {
             }
             //end of LoadFile so PC + 1
             return this.PC+1;
+        }
+
+        //advances program after user input has been used to set a register
+        public HashMap<String, String> advanceAfterUserInput(int gpr, int val){
+            if(val < -32768 || val > 32767){
+                this.debugOutput = "ERROR: value must be between -32768 and 32767";
+                this.updateRegisters();
+                return this.registers; 
+            }
+            String debugOut = "";
+            if(gpr == 0){
+                this.GPR0 = val;
+                debugOut = "IN: GPR0 set with: " + this.GPR0;
+            }else if(gpr == 1){
+                this.GPR1 = val;
+                debugOut = "IN: GPR1 set with: " + this.GPR1;
+            }else if(gpr == 2){
+                this.GPR2 = val;
+                debugOut = "IN: GPR2 set with: " + this.GPR2;
+            }else if(gpr == 3){
+                this.GPR3 = val;
+                debugOut = "IN: GPR3 set with: " + this.GPR3;
+            }else{
+                debugOut = "ERROR: GPR must be between 0-3";
+            }
+            this.PC = this.getAddressOfNextInstruction();
+            this.updateMemoryRegisters();
+            //System.out.println("\nNext Instruction: " + this.PC);
+            this.debugOutput = debugOut + "\nNext Instruction: " + this.PC;
+            this.updateRegisters();
+            return this.registers;
         }
 
         //returns a int array where each portion of a loadStore instruction is parsed out
@@ -1414,6 +1453,7 @@ public class Simulator {
             }else{
                 return "ERROR: GPR must be between 0-3";
             }
+            return "ERROR IN SRC";
         }
 
         //Rotate register by count
@@ -1473,6 +1513,24 @@ public class Simulator {
                 return "ERROR: GPR must be between 0-3";
             }
             return "ERROR in RRC";
+        }
+
+        private String IN(int gpr, int ixr, int indirect, int devid){
+            if(gpr==0){
+                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR0.";
+                return "IN: GPR0 waiting for input";
+            }else if(gpr == 1){
+                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR1.";
+                return "IN: GPR1 waiting for input";
+            }else if(gpr == 2){
+                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR2.";
+                return "IN: GPR2 waiting for input";
+            }else if(gpr == 3){
+                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR3.";
+                return "IN: GPR3 waiting for input";
+            }else{
+                return "ERROR IN IN: GPR must be between 0-3";
+            }
         }
 
         private int rightRotate(int num, int shift, int bitWidth) {
