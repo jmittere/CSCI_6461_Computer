@@ -147,7 +147,7 @@ public class ComputerGUI extends Application {
         consoleInput.setPrefWidth(300);
         VBox consoleBox = new VBox(5, consoleLabel, consoleInput);
         // Printer Section
-        Label printerLabel = new Label("Printer:");
+        Label printerLabel = new Label("Console Printer:");
         TextArea printerOutput = new TextArea();
         printerOutput.setPrefHeight(100);
         printerOutput.setPrefWidth(300);
@@ -235,6 +235,9 @@ public class ComputerGUI extends Application {
             fieldMap.get("MFR").setText(registerContents.get("MFR"));
             fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
+            cacheOutput.setText(registerContents.get("cache"));
+            fieldMap.get("CC").setText(registerContents.get("CC"));
+            printerOutput.setText(registerContents.get("consolePrinter"));
         });
         btnStep.setOnAction(e -> {
             HashMap<String, String> registerContents = this.sim.step(); //register contents returns a hashmap of all register contents after step()
@@ -251,11 +254,14 @@ public class ComputerGUI extends Application {
             fieldMap.get("MFR").setText(registerContents.get("MFR"));
             fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
+            cacheOutput.setText(registerContents.get("cache"));
+            fieldMap.get("CC").setText(registerContents.get("CC"));
+            printerOutput.setText(registerContents.get("consolePrinter"));
         });
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
         btnIPL.setOnAction(e -> {
             String pf = fieldMap.get("Program File").getText();
-            //System.out.println("Program File Path: " + pf);
+            System.out.println("Program File Path: " + pf);
             if(pf.equals("")){ //use hardcoded preloaded file
                 pf = "preload.txt";
             }
@@ -274,7 +280,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!gpr0Field.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(gpr0Field.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setGPR0(Integer.parseInt(gpr0Field.getText()));
@@ -282,7 +288,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -292,11 +298,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("GPR0 set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setGPR0(temp); //converts value in Binary text box to an octal string then decimal string
                 gpr0Field.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -308,7 +314,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!gpr1Field.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(gpr1Field.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setGPR1(Integer.parseInt(gpr1Field.getText()));
@@ -316,7 +322,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -326,11 +332,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("GPR1 set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setGPR1(temp); //converts value in Binary text box to an octal string then decimal string
                 gpr1Field.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -342,7 +348,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!gpr2Field.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(gpr2Field.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setGPR2(Integer.parseInt(gpr2Field.getText()));
@@ -350,7 +356,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -360,11 +366,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("GPR2 set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setGPR2(temp); //converts value in Binary text box to an octal string then decimal string
                 gpr2Field.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -376,7 +382,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!gpr3Field.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(gpr3Field.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setGPR3(Integer.parseInt(gpr3Field.getText()));
@@ -384,7 +390,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -394,11 +400,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("GPR3 set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setGPR3(temp); //converts value in Binary text box to an octal string then decimal string
                 gpr3Field.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -412,7 +418,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!ixr1Field.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(ixr1Field.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setIXR1(Integer.parseInt(ixr1Field.getText()));
@@ -420,7 +426,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -430,11 +436,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("IXR1 set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setIXR1(temp); //converts value in Binary text box to an octal string then decimal string
                 ixr1Field.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -447,7 +453,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!ixr2Field.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(ixr2Field.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setIXR2(Integer.parseInt(ixr2Field.getText()));
@@ -455,7 +461,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -465,11 +471,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("IXR2 set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setIXR2(temp); //converts value in Binary text box to an octal string then decimal string
                 ixr2Field.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -482,7 +488,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!ixr3Field.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(ixr3Field.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setIXR3(Integer.parseInt(ixr3Field.getText()));
@@ -490,7 +496,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -500,11 +506,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("IXR3 set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setIXR3(temp); //converts value in Binary text box to an octal string then decimal string
                 ixr3Field.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -518,7 +524,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!PCField.getText().equals("")){ //PC text box filled in
                 int temp = Integer.parseInt(PCField.getText());
-                if(temp < 0 || temp > 4095){
+                if(temp < 6 || temp > 2047){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setPC(Integer.parseInt(PCField.getText()));
@@ -540,7 +546,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 4095){
+                if(temp < 6 || temp > 2047){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -564,11 +570,11 @@ public class ComputerGUI extends Application {
                     fieldMap.get("Octal").setText("");
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 4095){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < 6 || temp > 2047){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                    num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                    num = Integer.toString(temp);
                     this.sim.setPC(temp); //converts value in Binary text box to an octal string then decimal string
                     this.sim.setMAR(temp);
                     PCField.setText(num);
@@ -597,7 +603,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!MARField.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(MARField.getText());
-                if(temp < 6 || temp > 4095){
+                if(temp < 6 || temp > 2047){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setMAR(Integer.parseInt(MARField.getText()));
@@ -605,7 +611,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 6 || temp > 4095){
+                if(temp < 6 || temp > 2047){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -615,11 +621,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("MAR set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 6 || temp > 4095){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < 6 || temp > 2047){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setMAR(temp); //converts value in Binary text box to an octal string then decimal string
                 MARField.setText(num);
                 fieldMap.get("Binary").setText("");
@@ -632,7 +638,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!MBRField.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(MBRField.getText());
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setMBR(Integer.parseInt(MBRField.getText()));
@@ -640,7 +646,7 @@ public class ComputerGUI extends Application {
                 }
             }else if(!fieldMap.get("Octal").getText().equals("")){ 
                 int temp = Integer.parseInt(fieldMap.get("Octal").getText(), 8);
-                if(temp < 0 || temp > 65535){
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     num = Conversion.convertToDecimalString(fieldMap.get("Octal").getText());
@@ -650,11 +656,11 @@ public class ComputerGUI extends Application {
                     debugOutput.setText("MBR set with: " + num);
                 }
             }else if(!fieldMap.get("Binary").getText().equals("")){
-                int temp = Integer.parseInt(fieldMap.get("Binary").getText(), 2);
-                if(temp < 0 || temp > 65535){
+                int temp = (int) Long.parseLong(fieldMap.get("Binary").getText(), 2);
+                if(temp < -32768 || temp > 32768){
                     debugOutput.setText("Value is not valid.");
                 }else{
-                num = Integer.toString(Integer.parseInt(fieldMap.get("Binary").getText(), 2));
+                num = Integer.toString(temp);
                 this.sim.setMBR(temp); //converts value in Binary text box to an octal string then decimal string
                 MBRField.setText(num);
                 fieldMap.get("Binary").setText("");
