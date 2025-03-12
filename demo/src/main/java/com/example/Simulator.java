@@ -32,6 +32,8 @@ public class Simulator {
         //debug output to be passed to the frontend debugOutput text area 
         //contains error code if failed instruction or symbolic instruction
         private String debugOutput;
+        //content that is being outputted to console printer
+        private String consolePrinter;
 
         //load file location and loadFile array
         private String programFile;
@@ -81,6 +83,7 @@ public class Simulator {
             this.registers = new HashMap<>();
             this.initializeOpcodes();
             this.cache = new Cache();
+            this.consolePrinter = "";
         }
 
         //updates hashmap that has contents of each register
@@ -159,6 +162,7 @@ public class Simulator {
             }  
             this.registers.put("debugOutput", this.debugOutput);
             this.registers.put("cache", this.cache.DisplayCacheBlocks());
+            this.registers.put("consolePrinter", this.consolePrinter);
         }
 
 
@@ -290,15 +294,21 @@ public class Simulator {
             String opCode = this.opCodes.get(opCodeBinaryString);
             String binaryStr = String.format("%" + bitWidth + "s", Integer.toBinaryString(instr & ((1 << bitWidth) - 1))).replace(' ', '0');
             System.out.println("BinaryIns: " + binaryStr);
-            //System.out.println("binaryIns: " + binaryInstruction);
-            //System.out.println("opCodeBinaryString: " +opCodeBinaryString);
-            //System.out.println("OpCode: " + opCode);
             if(opCode == null){
                 //System.out.println("Opcode null");
                 this.PC = this.getAddressOfNextInstruction();
                 this.debugOutput = "ERROR: OpCode null";
                 this.updateRegisters();
                 //System.out.println("Next Instruction: " + this.PC);
+                return this.registers;
+            }
+            //HALT THE PROGRAM
+            if(opCodeBinaryString == "000000" && binaryInstruction.substring(10) == "000000"){ //Halt conditions
+                this.PC = this.getAddressOfNextInstruction();
+                this.updateMemoryRegisters();
+                //System.out.println("\nNext Instruction: " + this.PC);
+                this.debugOutput = "HALT: Stopping the Program" + "\nNext Instruction: " + this.PC;
+                this.updateRegisters();
                 return this.registers;
             }
             int[] contents = new int[4];
@@ -451,7 +461,22 @@ public class Simulator {
                         this.updateRegisters();
                         return this.registers;
                     }
-                    break;  
+                    break; 
+                case "OUT":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.OUT(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("OUT");
+                    break; 
+                case "SRC": 
+                    contents = this.parseShiftRotate(binaryInstruction);
+                    this.debugOutput = this.SRC(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("SRC");
+                    break;
+                case "RRC": 
+                    contents = this.parseShiftRotate(binaryInstruction);
+                    this.debugOutput = this.RRC(contents[0], contents[1], contents[2], contents[3]);
+                    System.out.println("RRC");
+                    break;
                 default:
                     //System.out.println("OpCode: " + opCode);
                     //System.out.println("BinaryIns: " + binaryInstruction);
@@ -491,6 +516,19 @@ public class Simulator {
             contents[1] = Integer.parseInt(binaryString.substring(8,10), 2); //ixr
             contents[2] = Integer.parseInt(binaryString.substring(10,11), 2); //indirect bit
             contents[3] = Integer.parseInt(binaryString.substring(11,16), 2); //address
+            return contents;
+        }
+
+        //returns a int array where each portion of a shiftRotate instruction is parsed out
+        //returned contents are in decimal
+        //[0] == gpr, [1] == A/L, [2] == L/R, [3] == Count
+        public int[] parseShiftRotate(String binaryString){
+            assert binaryString.length() == 16: "Instructions must be 16 bits";
+            int[] contents = new int[4]; // Creates an array of size 4
+            contents[0] = Integer.parseInt(binaryString.substring(6,8), 2); //gpr
+            contents[1] = Integer.parseInt(binaryString.substring(8,9), 2); //A/L
+            contents[2] = Integer.parseInt(binaryString.substring(9,10), 2); //L/R
+            contents[3] = Integer.parseInt(binaryString.substring(12), 2); //count
             return contents;
         }
 
@@ -1271,6 +1309,180 @@ public class Simulator {
             }
             return "JGE: no jump";
         }
+
+        //I/O Operations
+        private String OUT(int gpr, int ixr, int indirect, int devid){
+            if(devid!=1){
+                System.out.println("ERROR: Can only print to Console Printer");
+                return "ERROR: Can only print to Console Printer";
+            }
+            if(gpr==0){ //print GPR0 to console printer
+                this.consolePrinter = Integer.toString(this.GPR0);
+                return "OUT: " + this.GPR0 + " printed to the console";
+            }else if(gpr==1){
+                this.consolePrinter = Integer.toString(this.GPR1);
+                return "OUT: " + this.GPR1 + " printed to the console";
+            }else if(gpr==2){
+                this.consolePrinter = Integer.toString(this.GPR2);
+                return "OUT: " + this.GPR2 + " printed to the console";
+            }else if(gpr==3){
+                this.consolePrinter = Integer.toString(this.GPR3);
+                return "OUT: " + this.GPR3 + " printed to the console";
+            }
+            return "ERROR in OUT: GPR must be 0-3";
+        }
+
+        //Shift and Rotate Operations
+        //Shift register by count
+        private String SRC(int gpr, int AL, int LR, int count){
+            if(count>16){
+                System.out.println("ERROR: count can not be greater than 16");
+            }
+            if(gpr == 0){
+                if(LR == 1){//Shift Left
+                    if(AL == 1){ //Logical Shift, ignores sign bit
+                        //shift left, logical and arithmetic are identical in java
+                        this.GPR0 = this.GPR0 << count;
+                        return "SRC: GPR0 left shifted to: " + this.GPR0;
+                    }
+                }else{//Shift Right
+                    if(AL == 1){  //Logical Shift, ignores sign bit
+                        //shift right, logical
+                        this.GPR0 = this.GPR0 >>> count;
+                        return "SRC: GPR0 right logical shifted to: " + this.GPR0;
+                    }else{
+                        //shift right, arithmetic
+                        this.GPR0 = this.GPR0 >> count;
+                        return "SRC: GPR0 right arithmetic shifted to: " + this.GPR0;
+                    }
+                }
+            }else if(gpr == 1){
+                if(LR == 1){//Shift Left
+                    if(AL == 1){ //Logical Shift, ignores sign bit
+                        //shift left, logical and arithmetic are identical in java
+                        this.GPR1 = this.GPR1 << count;
+                        return "SRC: GPR1 left shifted to: " + this.GPR1;
+                    }
+                }else{//Shift Right
+                    if(AL == 1){  //Logical Shift, ignores sign bit
+                        //shift right, logical
+                        this.GPR1 = this.GPR1 >>> count;
+                        return "SRC: GPR1 right logical shifted to: " + this.GPR1;
+                    }else{
+                        //shift right, arithmetic
+                        this.GPR1 = this.GPR1 >> count;
+                        return "SRC: GPR1 right arithmetic shifted to: " + this.GPR1;
+                    }
+                }
+            }else if(gpr == 2){
+                if(LR == 1){//Shift Left
+                    if(AL == 1){ //Logical Shift, ignores sign bit
+                        //shift left, logical and arithmetic are identical in java
+                        this.GPR2 = this.GPR2 << count;
+                        return "SRC: GPR2 left shifted to: " + this.GPR2;
+                    }
+                }else{//Shift Right
+                    if(AL == 1){  //Logical Shift, ignores sign bit
+                        //shift right, logical
+                        this.GPR2 = this.GPR2 >>> count;
+                        return "SRC: GPR2 right logical shifted to: " + this.GPR2;
+                    }else{
+                        //shift right, arithmetic
+                        this.GPR2 = this.GPR2 >> count;
+                        return "SRC: GPR2 right arithmetic shifted to: " + this.GPR2;
+                    }
+                }
+
+            }else if(gpr == 3){
+                if(LR == 1){//Shift Left
+                    if(AL == 1){ //Logical Shift, ignores sign bit
+                        //shift left, logical and arithmetic are identical in java
+                        this.GPR3 = this.GPR3 << count;
+                        return "SRC: GPR0 left shifted to: " + this.GPR3;
+                    }
+                }else{//Shift Right
+                    if(AL == 1){  //Logical Shift, ignores sign bit
+                        //shift right, logical
+                        this.GPR3 = this.GPR3 >>> count;
+                        return "SRC: GPR3 right logical shifted to: " + this.GPR3;
+                    }else{
+                        //shift right, arithmetic
+                        this.GPR3 = this.GPR3 >> count;
+                        return "SRC: GPR3 right arithmetic shifted to: " + this.GPR3;
+                    }
+                }
+            }else{
+                return "ERROR: GPR must be between 0-3";
+            }
+        }
+
+        //Rotate register by count
+        private String RRC(int gpr, int AL, int LR, int count){
+            if(count>16){
+                System.out.println("ERROR: count can not be greater than 16");
+            }
+            if(gpr == 0){
+                if(LR == 1){//Rotate Left
+                    if(AL == 1){
+                        this.GPR0 = leftRotate(this.GPR0, count, 16);
+                        return "RRC: GPR0 left rotated to: " + this.GPR0;
+                    }
+                }else{//Rotate Right
+                    if(AL == 1){ 
+                        this.GPR0 = rightRotate(this.GPR0, count, 16);
+                        return "RRC: GPR0 right rotated to: " + this.GPR0;
+                    }
+                }
+            }else if(gpr == 1){
+                if(LR == 1){//Rotate Left
+                    if(AL == 1){
+                        this.GPR1 = leftRotate(this.GPR1, count, 16);
+                        return "RRC: GPR1 left rotated to: " + this.GPR1;
+                    }
+                }else{//Rotate Right
+                    if(AL == 1){ 
+                        this.GPR1 = rightRotate(this.GPR1, count, 16);
+                        return "RRC: GPR1 right rotated to: " + this.GPR1;
+                    }
+                }
+            }else if(gpr == 2){
+                if(LR == 1){//Rotate Left
+                    if(AL == 1){
+                        this.GPR2 = leftRotate(this.GPR2, count, 16);
+                        return "RRC: GPR2 left rotated to: " + this.GPR2;
+                    }
+                }else{//Rotate Right
+                    if(AL == 1){ 
+                        this.GPR2 = rightRotate(this.GPR2, count, 16);
+                        return "RRC: GPR2 right rotated to: " + this.GPR2;
+                    }
+                }
+            }else if(gpr == 3){
+                if(LR == 1){//Rotate Left
+                    if(AL == 1){
+                        this.GPR3 = leftRotate(this.GPR3, count, 16);
+                        return "RRC: GPR3 left rotated to: " + this.GPR3;
+                    }
+                }else{//Rotate Right
+                    if(AL == 1){ 
+                        this.GPR3 = rightRotate(this.GPR3, count, 16);
+                        return "RRC: GPR3 right rotated to: " + this.GPR3;
+                    }
+                }
+            }else{
+                return "ERROR: GPR must be between 0-3";
+            }
+            return "ERROR in RRC";
+        }
+
+        private int rightRotate(int num, int shift, int bitWidth) {
+            return (num >>> shift) | (num << (bitWidth - shift));
+        }
+
+        private int leftRotate(int num, int shift, int bitWidth) {
+            return (num << shift) | (num >>> (bitWidth - shift));
+        }
+
 
         private int computeEffectiveAddress(int ixr, int indirect, int address, boolean ignoreIXR){
             int ea = -1;

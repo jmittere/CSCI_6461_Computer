@@ -147,7 +147,7 @@ public class ComputerGUI extends Application {
         consoleInput.setPrefWidth(300);
         VBox consoleBox = new VBox(5, consoleLabel, consoleInput);
         // Printer Section
-        Label printerLabel = new Label("Printer:");
+        Label printerLabel = new Label("Console Printer:");
         TextArea printerOutput = new TextArea();
         printerOutput.setPrefHeight(100);
         printerOutput.setPrefWidth(300);
@@ -236,6 +236,8 @@ public class ComputerGUI extends Application {
             fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
             cacheOutput.setText(registerContents.get("cache"));
+            fieldMap.get("CC").setText(registerContents.get("CC"));
+            printerOutput.setText(registerContents.get("consolePrinter"));
         });
         btnStep.setOnAction(e -> {
             HashMap<String, String> registerContents = this.sim.step(); //register contents returns a hashmap of all register contents after step()
@@ -253,6 +255,8 @@ public class ComputerGUI extends Application {
             fieldMap.get("IR").setText(registerContents.get("IR"));
             debugOutput.setText(registerContents.get("debugOutput"));
             cacheOutput.setText(registerContents.get("cache"));
+            fieldMap.get("CC").setText(registerContents.get("CC"));
+            printerOutput.setText(registerContents.get("consolePrinter"));
         });
         btnHalt.setOnAction(e -> System.out.println("Halt button clicked"));
         btnIPL.setOnAction(e -> {
