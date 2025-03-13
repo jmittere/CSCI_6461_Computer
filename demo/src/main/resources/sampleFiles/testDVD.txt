@@ -1,0 +1,6 @@
+LOC 7
+Data 20
+Data 2
+LDR 0,0,7 ; Load GPR0 with 20
+LDR 2,0,8 ; Load GPR2 with 2
+DVD 0,2 

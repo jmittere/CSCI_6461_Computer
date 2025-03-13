@@ -1,0 +1,10 @@
+                  LOC 7
+000007   000012   Data 10 
+000010   000000   Data 0
+000011   002007   LDR 0,0,7 ;LDR GPR0 with value at address 7 which is 10
+000012   002410   LDR 1,0,8 ;LDR GPR1 with value at address 8 which is 0
+000013   020015   JZ 0,0,13  ;JZ if GPR0 = 0, it doesn't so PC increments
+000014   020016   JZ 0,0,14 ;JZ if GPR1 = 0, it does, so PC jumps to 14
+000015   022017   JNE 0,0,15 ;Jump to address 15 if GPR0 does not equal zero
+000016   000014   Data 12
+000017   026007   JMA 0,7 ;unconditonal jump to address 7

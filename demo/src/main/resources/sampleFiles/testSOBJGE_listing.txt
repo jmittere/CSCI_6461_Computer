@@ -1,0 +1,10 @@
+                  LOC 7
+000007   000012   Data 10
+000010   000001   Data 1
+000011   000015   Data 13
+000012   002007   LDR 0,0,7 ;Load GPR0 with 10
+000013   002410   LDR 1,0,8 ;load GPR1 with 1
+000014   034411   SOB 1,0,9 ;Subtract 1 from GPR1 and branch if greater than zero, it isnt so dont branch
+000015   036017   JGE 0,0,15 ;jump is gpr1 is greater than zero, it is jump to SOB line
+000016   000001   Data 1
+000017   034012   SOB 0,0,10 ;Subtract 1 from GPR0 and branch to LDR007 line if greater than zero, it is so branch

@@ -66,7 +66,7 @@ public class Simulator {
             this.IR = -32769;
             this.conditionCode = new int[4]; //[OVERFLOW, UNDERFLOW, DIVZERO, EQUALNOT] 
             for (int i=0; i<conditionCode.length; i++){
-                this.conditionCode[i] = 0;
+                this.conditionCode[i] = -1;
             }
             this.IXR1 = -32769;
             this.IXR2 = -32769;
@@ -156,7 +156,9 @@ public class Simulator {
             }else if(this.conditionCode[2] == 1){
                 this.registers.put("CC", "DIVZERO");
             }else if(this.conditionCode[3] == 1){
-                this.registers.put("CC", "EQUALORNOT");
+                this.registers.put("CC", "EQUAL");
+            }else if(this.conditionCode[3] == 0){
+                this.registers.put("CC", "NOTEQUAL");
             }else{
                 this.registers.put("CC", "");
             }  
@@ -266,6 +268,7 @@ public class Simulator {
         //should error if pc is not set
         //should also increment pc after each instruction
         public HashMap<String, String> step(){
+            this.consolePrinter = "";
             if(this.PC == -32769){
                 //System.out.println("Cannot step without setting PC...");
                 this.debugOutput = "ERROR: Cannot step without setting PC";
@@ -289,11 +292,14 @@ public class Simulator {
 
             int bitWidth = 16; //16, Mask to extract only the lower `bitWidth` bits
             
-            String binaryInstruction = Conversion.convertToBinaryString(instr, 16); //gets the binary equivalent of the instruction stored at memory location of PC
+            //String binaryInstruction = Conversion.convertToBinaryString(instr, 16); //gets the binary equivalent of the instruction stored at memory location of PC
+            String binaryInstruction = String.format("%" + bitWidth + "s", Integer.toBinaryString(instr & ((1 << bitWidth) - 1))).replace(' ', '0');
             String opCodeBinaryString = binaryInstruction.substring(0, 6);
             String opCode = this.opCodes.get(opCodeBinaryString);
-            String binaryStr = String.format("%" + bitWidth + "s", Integer.toBinaryString(instr & ((1 << bitWidth) - 1))).replace(' ', '0');
-            System.out.println("BinaryIns: " + binaryStr);
+            System.out.println("BinaryInst: " + binaryInstruction);
+            System.out.println("Opcode: " + opCode);
+            System.out.println("BinaryInstruction: " + binaryInstruction.substring(0, 6));
+            System.out.println(binaryInstruction.substring(10));
             if(opCode == null){
                 //System.out.println("Opcode null");
                 this.PC = this.getAddressOfNextInstruction();
@@ -303,7 +309,7 @@ public class Simulator {
                 return this.registers;
             }
             //HALT THE PROGRAM
-            if(opCodeBinaryString == "000000" && binaryInstruction.substring(10) == "000000"){ //Halt conditions
+            if(opCodeBinaryString.equals("000000") && binaryInstruction.substring(10).equals("000000")){ //Halt conditions
                 this.PC = this.getAddressOfNextInstruction();
                 this.updateMemoryRegisters();
                 //System.out.println("\nNext Instruction: " + this.PC);
@@ -670,7 +676,7 @@ public class Simulator {
         //returns false if failed to initalize with loadFile
         public boolean initializeProgram(){
             boolean res;
-            if(this.programFile == ""){
+            if(this.programFile.equals("")){
                 return false;
             }else{
                 res = this.readLoadFile();

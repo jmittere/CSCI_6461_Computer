@@ -1,0 +1,5 @@
+                  LOC 7
+000007   000012   Data 10
+000010   000014   Data 12
+000011   000015   Data 13
+000012   030007   JSR 0,7 ;GPR3 should get PC+1, PC jumps to address 7

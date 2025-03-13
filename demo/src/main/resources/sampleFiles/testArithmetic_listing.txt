@@ -1,0 +1,8 @@
+                  LOC 7
+000007   000001   Data 1
+000010   000002   Data 2
+000011   003410   LDR 3,0,8 ;LDR GPR3 with 2
+000012   011407   AMR 3,0,7 ;add 1 to GPR3
+000013   013407   SMR 3,0,7 ;subtract 1 from GPR3
+000014   015036   AIR 2,30 ;add 30 to GPR2
+000015   017012   SIR 2,10 ;subtract 10 from GPR2 should equal 20
