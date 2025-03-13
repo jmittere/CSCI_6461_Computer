@@ -161,7 +161,7 @@ public class Simulator {
                 this.registers.put("CC", "");
             }  
             this.registers.put("debugOutput", this.debugOutput);
-            this.registers.put("cache", this.cache.DisplayCacheBlocks());
+            this.registers.put("cache", this.cache.displayCacheBlocks());
             this.registers.put("consolePrinter", this.consolePrinter);
         }
 

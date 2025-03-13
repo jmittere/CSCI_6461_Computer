@@ -63,7 +63,7 @@ public class Cache {
     }
 
     // Optional method to print cache contents
-    public String DisplayCacheBlocks() {
+    public String displayCacheBlocks() {
         String output = "";
         for (Cacheblock block : cache.values()) {
             output = output + block + '\n';
