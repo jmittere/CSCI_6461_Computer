@@ -1,0 +1,19 @@
+                  LOC 7
+000007   000001   Data 1
+000010   000002   Data 2
+000011   000003   Data 3
+000012   000004   Data 4
+000013   000005   Data 5
+000014   000006   Data 6
+000015   000007   Data 7
+000016   000010   Data 8
+000017   000011   Data 9
+000020   000012   Data 10
+000021   000013   Data 11
+000022   000014   Data 12
+000023   000015   Data 13
+000024   000016   Data 14
+000025   000017   Data 15
+000026   000020   Data 16
+000027   002026   LDR 0,0,22 ;LDR GPR0 from Cache, should be 16
+000030   002407   LDR 1,0,7 ;LDR GPR1 from memory, 7 shouldnt be in cache still

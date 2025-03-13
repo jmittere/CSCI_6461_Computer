@@ -31,9 +31,9 @@ public class Cache {
     // Retrieve value from cache
     public Cacheblock getCacheBlock(int address) {
         if(cache.get(address) != null){
-            System.out.println("Retrieved Cacheblock from Cache");
+            System.out.println(address + " Retrieved Cacheblock from Cache");
         }else{
-            System.out.println("Address not in cache");
+            System.out.println(address + " Address not in cache");
         }
         return cache.get(address);
     }

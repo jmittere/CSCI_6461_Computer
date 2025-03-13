@@ -1,0 +1,19 @@
+                  LOC 7
+000007   000001   Data 1
+000010   002001   LDR 0,0,1 ;add 1 to GPR0
+000011   104000   STX 0,0,7 ;store 1 at address 7 in cache, won't be written till write back
+000012   000001   Data 1
+000013   000002   Data 2
+000014   000003   Data 3
+000015   000004   Data 4
+000016   000005   Data 5
+000017   000006   Data 6
+000020   000007   Data 7
+000021   000010   Data 8
+000022   000011   Data 9
+000023   000012   Data 10
+000024   000013   Data 11
+000025   000014   Data 12
+000026   000015   Data 13
+000027   000016   Data 14 ;write back here maybe
+000030   000017   Data 15 ;maybe write back here
