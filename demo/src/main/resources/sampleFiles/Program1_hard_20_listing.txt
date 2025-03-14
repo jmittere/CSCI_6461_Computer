@@ -1,0 +1,62 @@
+                  LOC 8
+000010   000036   Data 30
+000011   102210   LDX 2,8  ;LOAD IXR2 with 30 for use in loop later
+000012   000000   Data 0 ;unused
+000013   000012   Data 10 ;stores address of input value with lowest diff, value will not be 10 at the end
+000014   000007   Data 7 ;superval ,val we are checking against
+000015   000000   Data 0 ;diff between superval and current input val
+000016   077776   Data 32766 ; old minimum diff
+000017   000000   Data 0
+000020   000025   Data 21 ;stores number of times to loop and check inputval against superval, 1 more than num of inputVal
+000021   001750   Data 1000 ;store address of nextInputval
+000022   102121   LDX 1,17  ;load IXR1 with 1000 
+                  LOC 1000
+001750   000144   Data 100
+001751   000001   Data 1
+001752   000012   Data 10
+001753   000005   Data 5
+001754   000071   Data 57
+001755   000030   Data 24
+001756   001750   Data 1000
+001757   002734   Data 1500
+001760   003720   Data 2000
+001761   001274   Data 700
+001762   000017   Data 15
+001763   000023   Data 19
+001764   000024   Data 20
+001765   000021   Data 17
+001766   000006   Data 6
+001767   000031   Data 25
+001770   000036   Data 30
+001771   000023   Data 19
+001772   000257   Data 175
+001773   000024   Data 20
+                  LOC 20
+000024   003420   LDR 3,0,16  ;load looping criteria
+000025   035427   SOB 3,0,23  ;if looping criteria > 0, jump into loop
+000026   026220   JMA 2,16  ;jump to end to print outputVal IXR2(30) + 16 = 46 
+000027   003014   LDR 2,0,12  ;load GPR2 with superval
+000030   013061   SMR 2,0,17,1 ;Subtract contents(17)->contents(add of nextInputVal), compares with superVal
+000031   037202   JGE 2,2,2 ;if GPR2 >= 0, jump to line 32 to store looping criteria and store diff, else get abs val and store
+000032   002017   LDR 0,0,15  ;set GPR0 to 0
+000033   016001   SIR 0,1  ;set GPR0 to -1, so we can get abs val by multiplying
+000034   005420   STR 3,0,16  ;GPR3 contains number of times to loop, temporarily storing it to use GPR3 b/c abt to be overwritten
+000035   161000   MLT 2,0  ;GPR3 gets absolute val of current diff with multiply
+000036   005415   STR 3,0,13 ;store diff between superVal and curr inputVal
+000037   026204   JMA 2,4 ;IXR2(30) + 4 = 34, jump over line 32 to line 34 because GPR2 and 3 already stored
+000040   005420   STR 3,0,16 ;store looping criteria
+000041   005015   STR 2,0,13 ;store diff between superVal and curr inputVal
+000042   002016   LDR 0,0,14  ;load GPR0 with old minimum diff
+000043   012015   SMR 0,0,13  ;old diff - new diff 
+000044   036210   JGE 0,2,8  ;new diff less than old, so jump to line 38
+000045   026214   JMA 2,12 ;IXR2(30) + 12 = 42, old diff less than new, so jump to increment nextInputVal
+000046   003015   LDR 2,0,13 ;load GPR with new minimum diff
+000047   005016   STR 2,0,14 ;overwrite old min diff with new min diff that is in GPR2
+000050   003021   LDR 2,0,17 ;get address of inputVal closest to superVal
+000051   005013   STR 2,0,11 ;Store address of new inputVal closest to superVal @ 11 for output
+000052   002421   LDR 1,0,17 ;GPR1 gets 1000 which is address of nextInputVal, Increments address of next inputval @ 17
+000053   014401   AIR 1,1 ;increment GPR1 to get address of nextInputVal
+000054   004421   STR 1,0,17 ;Store address of nextInputVal at address 17
+000055   026024   JMA 0,20 ;jump to top of loop block
+000056   003453   LDR 3,0,11,1 ;get c(11)  -> c(inputVal) that is closest to superVal, indirect bit
+000057   145401   OUT 3,1  ;OUTPUT number closest to superVal
