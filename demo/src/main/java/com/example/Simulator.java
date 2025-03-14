@@ -209,66 +209,39 @@ public class Simulator {
             opCodes.put("101001", "STFR");
         } 
         
-        //retrieves a value from an address in memory using a String decimal address
-        //adds address and memory to cache if not already loaded 
-        public int getFromMemory(int address){
-            Cacheblock c = this.cache.getCacheBlock(address);
-            if (c==null) { //address not loaded into cache
-                System.out.println(address + " not in cache");
-            }else{
-                return c.getValue();
-            }
-
-            if(!memory.containsKey(address)){
-                return -1;
-            }else if(address < 0 || address > 2047){
-                //TODO: Throw exception for trying to access memory out of bounds exception
-                return -1;
-            }else{
-                int val = this.memory.get(address); //value from memory
-                Cacheblock deadBlock = this.cache.setCacheBlock(address, val); //add address and value to cache before returning memory
-                if(deadBlock != null){ //need to do a write back
-                    int addr = deadBlock.getAddress();
-                    val = deadBlock.getValue();        
-                    if(addr < 6 || addr > 2047){
-                        System.out.println("Error storing during write back...");
-                    }else if(val < -32768 || val > 32767){
-                        System.out.println("Error storing during write back...");
-                    }else{
-                        this.memory.put(addr, val); //write back
-                        System.out.println("Write Back: Stored value back in memory for cache block...");
-                    }
-                }
-                return val;
-            }
-        }
+        
 
         //runs the entire program in the LoadFile when the run button is pressed
         public HashMap<String, String> run(){
+            HashMap<String, String> registerContents = null;
             if(this.programFile.equals("")){
                 this.debugOutput = "No Program File to Run";
                 this.updateRegisters();
                 return this.registers;
             }
-    
-            for (int i = 0; i < this.loadFile.size(); i++) { //runs through each line of the load file and steps for each line
-                //System.out.println(i);
-                this.step();
-                /*if(this.debugOutput.contains("ERROR: Cannot step without setting PC")){
-                    break;
-                } */
 
+            int count = 1;
+            registerContents = this.step();
+            if((registerContents.get("debugOutput")).contains("waiting for input")){
+                return registerContents;
             }
-            this.updateMemoryRegisters();
-            this.updateRegisters();
-            return this.registers;
+            while(!(registerContents.get("debugOutput")).contains("ERROR: No instruction")){ //while there are still valid instructions to be executed
+                if(registerContents.get("debugOutput").contains("waiting for input")){
+                    return registerContents;
+                }
+                registerContents = this.step();
+                count++;
+                if(count > 10000000){ //failsafe to prevent infinite loops
+                    System.exit(0);
+                }
+            }
+            return registerContents;
         }
 
         //steps through memory depending on where PC is set
         //should error if pc is not set
         //should also increment pc after each instruction
         public HashMap<String, String> step(){
-            this.consolePrinter = "";
             if(this.PC == -32769){
                 //System.out.println("Cannot step without setting PC...");
                 this.debugOutput = "ERROR: Cannot step without setting PC";
@@ -296,23 +269,16 @@ public class Simulator {
             String binaryInstruction = String.format("%" + bitWidth + "s", Integer.toBinaryString(instr & ((1 << bitWidth) - 1))).replace(' ', '0');
             String opCodeBinaryString = binaryInstruction.substring(0, 6);
             String opCode = this.opCodes.get(opCodeBinaryString);
-            System.out.println("BinaryInst: " + binaryInstruction);
-            System.out.println("Opcode: " + opCode);
-            System.out.println("BinaryInstruction: " + binaryInstruction.substring(0, 6));
-            System.out.println(binaryInstruction.substring(10));
             if(opCode == null){
-                //System.out.println("Opcode null");
                 this.PC = this.getAddressOfNextInstruction();
                 this.debugOutput = "ERROR: OpCode null";
                 this.updateRegisters();
-                //System.out.println("Next Instruction: " + this.PC);
                 return this.registers;
             }
             //HALT THE PROGRAM
             if(opCodeBinaryString.equals("000000") && binaryInstruction.substring(10).equals("000000")){ //Halt conditions
                 this.PC = this.getAddressOfNextInstruction();
                 this.updateMemoryRegisters();
-                //System.out.println("\nNext Instruction: " + this.PC);
                 this.debugOutput = "HALT: Stopping the Program" + "\nNext Instruction: " + this.PC;
                 this.updateRegisters();
                 return this.registers;
@@ -342,57 +308,46 @@ public class Simulator {
                 case "AMR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.AMR(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("AMR");
                     break;
                 case "SMR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.SMR(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("SMR");
                     break;
                 case "AIR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.AIR(contents[0], contents[3]);
-                    System.out.println("AIR");
                     break;
                 case "SIR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.SIR(contents[0], contents[3]);
-                    System.out.println("SIR");
                     break;
                 case "MLT":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.MLT(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("MLT");
                     break;
                 case "DVD":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.DVD(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("DVD");
                     break;
                 case "TRR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.TRR(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("TRR");
                     break;
                 case "AND":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.AND(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("AND");
                     break;
                 case "ORR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.ORR(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("ORR");
                     break;
                 case "NOT":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.NOT(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("NOT");
                     break;
                 case "JZ":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.JZ(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("JZ");
                     if(debugOutput.contains("PC set with")){//pc already set so return from step here
                         this.updateMemoryRegisters();
                         this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
@@ -403,7 +358,6 @@ public class Simulator {
                 case "JNE":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.JNE(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("JNE");
                     if(debugOutput.contains("PC set with")){//pc already set so return from step here
                         this.updateMemoryRegisters();
                         this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
@@ -414,7 +368,6 @@ public class Simulator {
                 case "JCC":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.JCC(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("JCC");
                     if(debugOutput.contains("PC set with")){//pc already set so return from step here
                         this.updateMemoryRegisters();
                         this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
@@ -425,7 +378,6 @@ public class Simulator {
                 case "JMA":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.JMA(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("JMA");
                     this.updateMemoryRegisters();
                     this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
                     this.updateRegisters();
@@ -433,7 +385,6 @@ public class Simulator {
                 case "JSR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.JSR(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("JSR");
                     this.updateMemoryRegisters();
                     this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
                     this.updateRegisters();
@@ -441,7 +392,6 @@ public class Simulator {
                 case "RFS":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.RFS(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("RFS");
                     this.updateMemoryRegisters();
                     this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
                     this.updateRegisters();
@@ -449,7 +399,6 @@ public class Simulator {
                 case "SOB":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.SOB(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("SOB");
                     if(debugOutput.contains("PC set with")){//pc already set so return from step here
                         this.updateMemoryRegisters();
                         this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
@@ -460,7 +409,6 @@ public class Simulator {
                 case "JGE":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.JGE(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("JGE");
                     if(debugOutput.contains("PC set with")){//pc already set so return from step here
                         this.updateMemoryRegisters();
                         this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
@@ -471,12 +419,10 @@ public class Simulator {
                 case "OUT":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.OUT(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("OUT");
                     break;
                 case "IN":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.IN(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("IN");
                     this.updateMemoryRegisters();
                     this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
                     this.updateRegisters();
@@ -484,23 +430,18 @@ public class Simulator {
                 case "SRC": 
                     contents = this.parseShiftRotate(binaryInstruction);
                     this.debugOutput = this.SRC(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("SRC");
                     break;
                 case "RRC": 
                     contents = this.parseShiftRotate(binaryInstruction);
                     this.debugOutput = this.RRC(contents[0], contents[1], contents[2], contents[3]);
-                    System.out.println("RRC");
                     break;
                 default:
-                    //System.out.println("OpCode: " + opCode);
-                    //System.out.println("BinaryIns: " + binaryInstruction);
                     this.debugOutput = "ERROR: Invalid Instruction";
-                    System.out.println("Invalid Command.");
+                    //System.out.println("Invalid Command.");
             }
 
             this.PC = this.getAddressOfNextInstruction();
             this.updateMemoryRegisters();
-            //System.out.println("\nNext Instruction: " + this.PC);
             this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
             this.updateRegisters();
             return this.registers;
@@ -545,7 +486,6 @@ public class Simulator {
             }
             this.PC = this.getAddressOfNextInstruction();
             this.updateMemoryRegisters();
-            //System.out.println("\nNext Instruction: " + this.PC);
             this.debugOutput = debugOut + "\nNext Instruction: " + this.PC;
             this.updateRegisters();
             return this.registers;
@@ -633,14 +573,10 @@ public class Simulator {
                 String instruction = words[1];
                 int num = Integer.parseInt(words[1], 8);
                 String binaryInst = Conversion.convertToBinaryString(num, 16);
-                System.out.println("BinaryInst: " + binaryInst);
                 if (binaryInst.charAt(0) == '1') {
                     num -= (1 << 16); // Subtract 2^bitWidth to get the correct negative value
                 }
-                System.out.println("Num: " + num);
                 if(num < -32768 || num > 32767){
-                    System.out.println("Inst: " + instruction);
-                    System.out.println("Num: "+ num);
                     System.out.println("ERROR: Cannot store a value over 32767 or less than -32768");
                     return false;
                 }else{
@@ -653,6 +589,42 @@ public class Simulator {
 
         private void printMemory(){
             this.memory.forEach((key, value) -> System.out.println(key + " -> " + value));
+        }
+
+        //retrieves a value from an address in memory using an int decimal address
+        //adds address and memory to cache if not already loaded 
+        public int getFromMemory(int address){
+            Cacheblock c = this.cache.getCacheBlock(address);
+            if (c==null) { //address not loaded into cache
+                //System.out.println(address + " not in cache");
+            }else{
+                //System.out.println(c.getValue() + " from Cache");
+                return c.getValue();
+            }
+
+            if(!memory.containsKey(address)){
+                return -1;
+            }else if(address < 0 || address > 2047){
+                //TODO: Throw exception for trying to access memory out of bounds exception
+                return -1;
+            }else{
+                int val = this.memory.get(address); //value from memory
+                Cacheblock deadBlock = this.cache.setCacheBlock(address, val); //add address and value to cache before returning memory
+                if(deadBlock != null){ //need to do a write back
+                    int addr = deadBlock.getAddress();
+                    int oldVal = deadBlock.getValue();        
+                    if(addr < 6 || addr > 2047){
+                        System.out.println("Error storing during write back...");
+                    }else if(oldVal < -32768 || oldVal > 32767){
+                        System.out.println("Error storing during write back...");
+                    }else{
+                        this.memory.put(addr, oldVal); //write back
+                        //System.out.println("Write Back: Stored value back in memory for cache block...");
+                    }
+                }
+                //System.out.println("Val returned from memory: " + val);
+                return val;
+            }
         }
 
         public boolean storeInMemory(int address, int value){
@@ -687,19 +659,24 @@ public class Simulator {
         //Load gpr register with value from memory
         private String LDR(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            int val = 0;
             switch (gpr) {
                 case 0: //load into gpr0
-                    this.setGPR0(this.getFromMemory(add));
-                    return "GPR0 set with: " + this.getFromMemory(add);
+                    val = this.getFromMemory(add);
+                    this.setGPR0(val);
+                    return "GPR0 set with: " + this.GPR0;
                 case 1: //load into gpr1
-                    this.setGPR1(this.getFromMemory(add));
-                    return "GPR1 set with: " + this.getFromMemory(add);
+                    val = this.getFromMemory(add);
+                    this.setGPR1(val);
+                    return "GPR1 set with: " + this.GPR1;
                 case 2: //load into gpr2
-                    this.setGPR2(this.getFromMemory(add));
-                    return "GPR2 set with: " + this.getFromMemory(add);
+                    val = this.getFromMemory(add);
+                    this.setGPR2(val);
+                    return "GPR2 set with: " + this.GPR2;
                 case 3: //load into gpr3
-                    this.setGPR3(this.getFromMemory(add));
-                    return "GPR3 set with: " + this.getFromMemory(add);
+                    val = this.getFromMemory(add);
+                    this.setGPR3(val);
+                    return "GPR3 set with: " + this.GPR3;
                 default:
                     return "Invalid command";
             }
@@ -710,16 +687,16 @@ public class Simulator {
             int add = this.computeEffectiveAddress(ixr, indirect, address, false);
             switch (gpr) {
                 case 0: //store gpr0 to memory
-                    this.memory.put(add, this.GPR0);
+                    this.storeInMemory(add, this.GPR0);
                     return "GPR0: " + this.GPR0 + " stored at: " + add;
                 case 1: //store gpr1 to memory
-                    this.memory.put(add, this.GPR1);
+                    this.storeInMemory(add, this.GPR1);
                     return "GPR1: " + this.GPR1 + " stored at: " + add;
                 case 2: //store gpr2 to memory
-                    this.memory.put(add, this.GPR2);
+                    this.storeInMemory(add, this.GPR2);
                     return "GPR2: " + this.GPR2 + " stored at: " + add;
                 case 3: //store gpr3 to memory
-                    this.memory.put(add, this.GPR3);
+                    this.storeInMemory(add, this.GPR3);
                     return "GPR3: " + this.GPR3 + " stored at: " + add;
                 default:
                     return "Invalid command";
@@ -750,16 +727,20 @@ public class Simulator {
         //Load Index register from memory
         private String LDX(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address, true);
+            int val = 0;
             switch (ixr) {
                 case 1: //load into ixr1
-                    this.setIXR1(this.getFromMemory(add));
-                    return "IXR1 set with: " + this.getFromMemory(add);
+                    val = this.getFromMemory(add);
+                    this.setIXR1(val);
+                    return "IXR1 set with: " + this.IXR1;
                 case 2: //load into ixr2
-                    this.setIXR2(this.getFromMemory(add));
-                    return "IXR2 set with: " + this.getFromMemory(add);
+                    val = this.getFromMemory(add);
+                    this.setIXR2(val);
+                    return "IXR2 set with: " + this.IXR2;
                 case 3: //load into ixr3
-                    this.setIXR3(this.getFromMemory(add));
-                    return "IXR3 set with: " + this.getFromMemory(add);
+                    val = this.getFromMemory(add);
+                    this.setIXR3(val);
+                    return "IXR3 set with: " + this.IXR3;
                 default:
                     return "Invalid command";
             }
@@ -770,13 +751,13 @@ public class Simulator {
             int add = this.computeEffectiveAddress(ixr, indirect, address, true);
             switch (ixr) {
                 case 1: //store ixr1 to memory
-                    this.memory.put(add, this.IXR1);
+                    this.storeInMemory(add,this.IXR1);
                     return "IXR1: " + this.IXR1 + " stored at: " + add;
                 case 2: //store ixr2 to memory
-                    this.memory.put(add, this.IXR2);
+                    this.storeInMemory(add,this.IXR2);
                     return "IXR2: " + this.IXR2 + " stored at: " + add;
                 case 3: //store ixr3 to memory
-                    this.memory.put(add, this.IXR3);
+                    this.storeInMemory(add,this.IXR3);
                     return "IXR3: " + this.IXR3 + " stored at: " + add;
                 default:
                     //System.out.println("Invalid command");
@@ -1151,8 +1132,6 @@ public class Simulator {
             }
         }
 
-        //TODO: Figure out if registers can be set to -1 or if they need to be uninitialized to 0
-        //TODO: Can registers be negative?
         //Bitwise NOT one gpr
         private String NOT(int gprx, int gpry, int indirect, int address){
             switch (gprx) {
@@ -1332,22 +1311,22 @@ public class Simulator {
             if(gpr == 0){
                 if(this.GPR0 >= 0){
                     this.PC = add;
-                    return "SOB: PC set with: " + this.PC;
+                    return "JGE: PC set with: " + this.PC;
                 }
             }else if(gpr == 1){
                 if(this.GPR1 >= 0){
                     this.PC = add;
-                    return "SOB: PC set with: " + this.PC;
+                    return "JGE: PC set with: " + this.PC;
                 }
             }else if(gpr == 2){
                 if(this.GPR2 >= 0){
                     this.PC = add;
-                    return "SOB: PC set with: " + this.PC;
+                    return "JGE: PC set with: " + this.PC;
                 }
             }else if(gpr == 3){
                 if(this.GPR3 >= 0){
                     this.PC = add;
-                    return "SOB: PC set with: " + this.PC;
+                    return "JGE: PC set with: " + this.PC;
                 }
             }else{
                 return "Invalid command";
@@ -1523,16 +1502,16 @@ public class Simulator {
 
         private String IN(int gpr, int ixr, int indirect, int devid){
             if(gpr==0){
-                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR0.";
+                this.consolePrinter = "IN: Enter a number in the Console Input text box.\nPress the Enter button to store it in GPR0.";
                 return "IN: GPR0 waiting for input";
             }else if(gpr == 1){
-                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR1.";
+                this.consolePrinter = "IN: Enter a number in the Console Input text box.\nPress the Enter button to store it in GPR1.";
                 return "IN: GPR1 waiting for input";
             }else if(gpr == 2){
-                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR2.";
+                this.consolePrinter = "IN: Enter a number in the Console Input text box.\nPress the Enter button to store it in GPR2.";
                 return "IN: GPR2 waiting for input";
             }else if(gpr == 3){
-                this.consolePrinter = "IN: Enter a number in the Console Input text box and press the Enter button to store it in GPR3.";
+                this.consolePrinter = "IN: Enter a number in the Console Input text box.\nPress the Enter button to store it in GPR3.";
                 return "IN: GPR3 waiting for input";
             }else{
                 return "ERROR IN IN: GPR must be between 0-3";
