@@ -710,15 +710,19 @@ public class Simulator {
             int add = this.computeEffectiveAddress(ixr, indirect, address, false);
             switch (gpr) {
                 case 0: //store gpr0 to memory
+                //TODO: FIX DIRECT MEMORY ACCESSING HERE, IT BYPASSES CACHE
                     this.memory.put(add, this.GPR0);
                     return "GPR0: " + this.GPR0 + " stored at: " + add;
                 case 1: //store gpr1 to memory
+                //TODO: FIX DIRECT MEMORY ACCESSING HERE, IT BYPASSES CACHE
                     this.memory.put(add, this.GPR1);
                     return "GPR1: " + this.GPR1 + " stored at: " + add;
                 case 2: //store gpr2 to memory
+                //TODO: FIX DIRECT MEMORY ACCESSING HERE, IT BYPASSES CACHE
                     this.memory.put(add, this.GPR2);
                     return "GPR2: " + this.GPR2 + " stored at: " + add;
                 case 3: //store gpr3 to memory
+                //TODO: FIX DIRECT MEMORY ACCESSING HERE, IT BYPASSES CACHE
                     this.memory.put(add, this.GPR3);
                     return "GPR3: " + this.GPR3 + " stored at: " + add;
                 default:
@@ -770,12 +774,15 @@ public class Simulator {
             int add = this.computeEffectiveAddress(ixr, indirect, address, true);
             switch (ixr) {
                 case 1: //store ixr1 to memory
+                //TODO: FIX DIRECT MEMORY ACCESSING HERE, IT BYPASSES CACHE
                     this.memory.put(add, this.IXR1);
                     return "IXR1: " + this.IXR1 + " stored at: " + add;
                 case 2: //store ixr2 to memory
+                //TODO: FIX DIRECT MEMORY ACCESSING HERE, IT BYPASSES CACHE
                     this.memory.put(add, this.IXR2);
                     return "IXR2: " + this.IXR2 + " stored at: " + add;
                 case 3: //store ixr3 to memory
+                //TODO: FIX DIRECT MEMORY ACCESSING HERE, IT BYPASSES CACHE
                     this.memory.put(add, this.IXR3);
                     return "IXR3: " + this.IXR3 + " stored at: " + add;
                 default:
