@@ -84,11 +84,13 @@ public class Simulator {
             this.initializeOpcodes();
             this.cache = new Cache();
             this.consolePrinter = "";
+            this.memory.put(1,6); //put address of HALT instruction at address 1 
+            this.memory.put(6,0); //put HALT instruction at address 6 for Machine Faults 
         }
 
         //updates hashmap that has contents of each register
         //must run this function before returning values to the frontend
-        private void updateRegisters(){
+        public void updateRegisters(){
             if(this.GPR0 == -32769){
                 this.registers.put("GPR0", "");
             }else{
@@ -209,8 +211,6 @@ public class Simulator {
             opCodes.put("101001", "STFR");
         } 
         
-        
-
         //runs the entire program in the LoadFile when the run button is pressed
         public HashMap<String, String> run(){
             HashMap<String, String> registerContents = null;
@@ -269,9 +269,8 @@ public class Simulator {
             String binaryInstruction = String.format("%" + bitWidth + "s", Integer.toBinaryString(instr & ((1 << bitWidth) - 1))).replace(' ', '0');
             String opCodeBinaryString = binaryInstruction.substring(0, 6);
             String opCode = this.opCodes.get(opCodeBinaryString);
-            if(opCode == null){
-                this.PC = this.getAddressOfNextInstruction();
-                this.debugOutput = "ERROR: OpCode null";
+            if(opCode == null){ //Illegal Operation Code machine fault
+                this.debugOutput = this.machineFault(2);
                 this.updateRegisters();
                 return this.registers;
             }
@@ -292,6 +291,12 @@ public class Simulator {
                 case "STR":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.STR(contents[0], contents[1], contents[2], contents[3]);
+                    if(this.debugOutput.contains("Illegal")){//trap or machine fault occured
+                        this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                        this.updateMemoryRegisters();
+                        this.updateRegisters();
+                        return this.registers;
+                    }
                     break;
                 case "LDA":
                     contents = this.parseLoadStoreInst(binaryInstruction);
@@ -304,6 +309,12 @@ public class Simulator {
                 case "STX":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.STX(contents[0], contents[1], contents[2], contents[3]);
+                    if(this.debugOutput.contains("Illegal")){//trap or machine fault occured
+                        this.debugOutput = this.debugOutput + "\nNext Instruction: " + this.PC;
+                        this.updateMemoryRegisters();
+                        this.updateRegisters();
+                        return this.registers;
+                    }
                     break;
                 case "AMR":    
                     contents = this.parseLoadStoreInst(binaryInstruction);
@@ -420,6 +431,10 @@ public class Simulator {
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.OUT(contents[0], contents[1], contents[2], contents[3]);
                     break;
+                case "CHK":    
+                    contents = this.parseLoadStoreInst(binaryInstruction);
+                    this.debugOutput = this.CHK(contents[0], contents[1], contents[2], contents[3]);
+                    break;
                 case "IN":
                     contents = this.parseLoadStoreInst(binaryInstruction);
                     this.debugOutput = this.IN(contents[0], contents[1], contents[2], contents[3]);
@@ -435,6 +450,12 @@ public class Simulator {
                     contents = this.parseShiftRotate(binaryInstruction);
                     this.debugOutput = this.RRC(contents[0], contents[1], contents[2], contents[3]);
                     break;
+                case "TRAP":
+                    contents = this.parseShiftRotate(binaryInstruction);
+                    this.debugOutput = this.TRAP(contents[0],contents[1], contents[2], contents[3]);
+                    this.updateMemoryRegisters();
+                    this.updateRegisters();
+                    return this.registers;
                 default:
                     this.debugOutput = "ERROR: Invalid Instruction";
                     //System.out.println("Invalid Command.");
@@ -566,7 +587,7 @@ public class Simulator {
                 }
 
                 String address = words[0];
-                if(Conversion.convertToDecimal(address) < 6 || Conversion.convertToDecimal(address) > 2047){
+                if((Conversion.convertToDecimal(address) != 0 && Conversion.convertToDecimal(address) < 6) || Conversion.convertToDecimal(address) > 2047){
                     System.out.println("ERROR: Cannot store in memory over 2047");
                     return false;
                 }
@@ -613,7 +634,7 @@ public class Simulator {
                 if(deadBlock != null){ //need to do a write back
                     int addr = deadBlock.getAddress();
                     int oldVal = deadBlock.getValue();        
-                    if(addr < 6 || addr > 2047){
+                    if((addr != 0 && addr < 6) || addr > 2047){
                         System.out.println("Error storing during write back...");
                     }else if(oldVal < -32768 || oldVal > 32767){
                         System.out.println("Error storing during write back...");
@@ -627,20 +648,49 @@ public class Simulator {
             }
         }
 
-        public boolean storeInMemory(int address, int value){
+        public String storeInMemory(int address, int value){
             if(this.cache.containsAddress(address)){ //cache has address, so write to cache rather than memory
                 this.cache.getCacheBlock(address).setValue(value);
                 this.cache.getCacheBlock(address).setDirtyBit(1); //modified value for memory in cache
-                return true;
+                return "";
             }
 
-            if(address < 6 || address > 2047){
-                return false;
+            if(address !=0 && address < 6){
+                return this.machineFault(0);
+            }else if(address > 2047){
+                return this.machineFault(3);
             }else if(value < -32768 || value > 32767){
-                return false;
+                return "Illegal Store value over alloted bit amount";
             }else{
                 this.memory.put(address, value);
-                return true;
+                return "";
+            }
+        }
+
+        private String machineFault(int id){
+            if(id == 0){//Illegal Memory Address to Reserved 1-6 Locations
+                this.MFR = 1; //set MFR to binary 0001
+                this.PC = 6; //set PC to address 6 which contains the HALT instruction
+                System.out.println("Illegal Memory Address to Reserved Locations");
+                return "Illegal Memory Address to Reserved Locations";
+            }else if(id == 1){ //Illegal Trap Code
+                this.MFR = 2; //set MFR to binary 0010
+                this.PC = 6; //set PC to address 6 which contains the HALT instruction
+                System.out.println("Illegal TRAP code");
+                return "Illegal TRAP code";
+            }else if(id == 2){ //Illegal Opcode
+                this.MFR = 4; //set MFR to binary 0100
+                this.PC = 6; //set PC to address 6 which contains the HALT instruction
+                System.out.println("Illegal Operation Code");
+                return "Illegal Operation Code";
+            }else if(id == 3){ //Illegal Memory Address beyond 2048
+                this.MFR = 8; //set MFR to binary 1000
+                this.PC = 6; //set PC to address 6 which contains the HALT instruction
+                System.out.println("Illegal Memory Address beyond 2048");
+                return "Illegal Memory Address beyond 2048";
+            }else{
+                System.out.println("Illegal machine fault ID");
+                return "Illegal machine fault ID";
             }
         }
 
@@ -654,6 +704,44 @@ public class Simulator {
                 res = this.readLoadFile();
             }
             return res;
+        }
+
+        //TRAP code
+        private String TRAP(int gpr, int AL, int LR, int trapCode){
+            assert trapCode < 16: "TrapCode cannot be greater than 15";
+            int nextPC = this.PC  + 1;
+            this.memory.put(2, nextPC);
+            int addressOfTrap = this.getFromMemory(0) + trapCode; //mem location 0 contains address of trap table + trapCode index
+            this.PC = addressOfTrap;
+            int count = 0;
+            HashMap<String, String> registerContents = null;
+            while(count < 1000){ //execute Trap subroutine while counter is less than 1000, no subroutines greater than that amount of inst
+                //get value at address of PC from memory
+                int instr = this.getFromMemory(this.PC);
+                if(instr == -1){
+                //System.out.println("No instruction at: " + this.PC);
+                return "ERROR: No instruction at " + this.PC;
+                }
+ 
+                int bitWidth = 16; //16, Mask to extract only the lower `bitWidth` bits 
+                //String binaryInstruction = Conversion.convertToBinaryString(instr, 16); //gets the binary equivalent of the instruction stored at memory location of PC
+                String binaryInstruction = String.format("%" + bitWidth + "s", Integer.toBinaryString(instr & ((1 << bitWidth) - 1))).replace(' ', '0');
+                String opCodeBinaryString = binaryInstruction.substring(0, 6);
+                String opCode = this.opCodes.get(opCodeBinaryString);
+                if(opCode == null){ //Illegal Operation Code machine fault
+                    return this.machineFault(2);
+                }else if(opCode.equals("RFS")){ //return from subroutine of TRAP
+                    //restore PC and break from loop
+                    registerContents = this.step();
+                    this.PC = this.memory.get(2); //get return address after TRAP
+                    return "Returning from TRAP" + "\nNext Instruction: " + this.PC;
+                }else{
+                    registerContents = this.step();
+                }
+
+                count ++;
+            }
+        
         }
 
         //Load gpr register with value from memory
@@ -685,19 +773,37 @@ public class Simulator {
         //Store value in gpr to memory
         private String STR(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address, false);
+            String res;
             switch (gpr) {
                 case 0: //store gpr0 to memory
-                    this.storeInMemory(add, this.GPR0);
-                    return "GPR0: " + this.GPR0 + " stored at: " + add;
+                    res = this.storeInMemory(add, this.GPR0);
+                    if (res.equals("")){
+                        return "GPR0: " + this.GPR0 + " stored at: " + add;
+                    }else{
+                        return res;
+                    }
+                    
                 case 1: //store gpr1 to memory
-                    this.storeInMemory(add, this.GPR1);
-                    return "GPR1: " + this.GPR1 + " stored at: " + add;
+                    res = this.storeInMemory(add, this.GPR1);
+                    if(res.equals("")){
+                        return "GPR1: " + this.GPR1 + " stored at: " + add;
+                    }else{
+                        return res;
+                    }
                 case 2: //store gpr2 to memory
-                    this.storeInMemory(add, this.GPR2);
-                    return "GPR2: " + this.GPR2 + " stored at: " + add;
+                    res = this.storeInMemory(add, this.GPR2);
+                    if(res.equals("")){
+                        return "GPR2: " + this.GPR2 + " stored at: " + add;
+                    }else{
+                        return res;
+                    }
                 case 3: //store gpr3 to memory
-                    this.storeInMemory(add, this.GPR3);
-                    return "GPR3: " + this.GPR3 + " stored at: " + add;
+                    res = this.storeInMemory(add, this.GPR3);
+                    if(res.equals("")){
+                        return "GPR3: " + this.GPR3 + " stored at: " + add;
+                    }else{
+                        return res;
+                    }
                 default:
                     return "Invalid command";
             }
@@ -749,16 +855,29 @@ public class Simulator {
         //Store Index register to memory
         private String STX(int gpr, int ixr, int indirect, int address){
             int add = this.computeEffectiveAddress(ixr, indirect, address, true);
+            String res;
             switch (ixr) {
                 case 1: //store ixr1 to memory
-                    this.storeInMemory(add,this.IXR1);
-                    return "IXR1: " + this.IXR1 + " stored at: " + add;
+                    res = this.storeInMemory(add,this.IXR1);
+                    if(res.equals("")){
+                        return "IXR1: " + this.IXR1 + " stored at: " + add;
+                    }else{
+                        return res;
+                    }
                 case 2: //store ixr2 to memory
-                    this.storeInMemory(add,this.IXR2);
-                    return "IXR2: " + this.IXR2 + " stored at: " + add;
+                    res = this.storeInMemory(add,this.IXR2);
+                    if(res.equals("")){
+                        return "IXR2: " + this.IXR2 + " stored at: " + add;
+                    }else{
+                        return res;
+                    }
                 case 3: //store ixr3 to memory
-                    this.storeInMemory(add,this.IXR3);
-                    return "IXR3: " + this.IXR3 + " stored at: " + add;
+                    res = this.storeInMemory(add,this.IXR3);
+                    if(res.equals("")){
+                        return "IXR3: " + this.IXR3 + " stored at: " + add;
+                    }else{
+                        return res;
+                    }
                 default:
                     //System.out.println("Invalid command");
                     return "Invalid command";
@@ -1268,8 +1387,7 @@ public class Simulator {
         //Return from Subroutine
         private String RFS(int gpr, int ixr, int indirect, int immed){
             this.GPR0 = immed;
-            this.PC = this.GPR3;
-            return "RFS: PC set with: " + this.PC + " and GPR0 set with" + this.GPR0;
+            return "RFS: GPR0 set with" + this.GPR0;
         }
 
         //Subtract one from register then branch
@@ -1339,6 +1457,29 @@ public class Simulator {
             if(devid!=1){
                 System.out.println("ERROR: Can only print to Console Printer");
                 return "ERROR: Can only print to Console Printer";
+            }
+            if(gpr==0){ //print GPR0 to console printer
+                this.consolePrinter = Integer.toString(this.GPR0);
+                return "OUT: " + this.GPR0 + " printed to the console";
+            }else if(gpr==1){
+                this.consolePrinter = Integer.toString(this.GPR1);
+                return "OUT: " + this.GPR1 + " printed to the console";
+            }else if(gpr==2){
+                this.consolePrinter = Integer.toString(this.GPR2);
+                return "OUT: " + this.GPR2 + " printed to the console";
+            }else if(gpr==3){
+                this.consolePrinter = Integer.toString(this.GPR3);
+                return "OUT: " + this.GPR3 + " printed to the console";
+            }
+            return "ERROR in OUT: GPR must be 0-3";
+        }
+
+        //TODO: Figure out what this instruction does
+        //Check device status from Register
+        private String CHK(int gpr, int ixr, int indirect, int devid){
+            if(devid!=1){
+                System.out.println("ERROR: Can only use CHK to Console Printer");
+                return "ERROR: Can only CHK to Console Printer";
             }
             if(gpr==0){ //print GPR0 to console printer
                 this.consolePrinter = Integer.toString(this.GPR0);

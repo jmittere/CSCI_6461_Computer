@@ -208,12 +208,15 @@ public class ComputerGUI extends Application {
             if(!MARField.getText().equals("") && !MBRField.getText().equals("")){ //MAR and MBR text box is filled in
                 int addr = Integer.parseInt(MARField.getText()); //value has already been checked to be within valid address range
                 int val = Integer.parseInt(MBRField.getText()); //value has already been checked to be within valid value range
-                boolean memoryResult = this.sim.storeInMemory(addr, val);
-                if(!memoryResult){
+                String memoryResult = this.sim.storeInMemory(addr, val);
+                if(memoryResult.equals("")){
                     //System.out.println("Invalid Memory Address");
-                    debugOutput.setText("Invalid Memory Address");
-                }else{
                     debugOutput.setText("Stored: " + MBRField.getText() + " at Address: " + MARField.getText());
+                }else{
+                    this.sim.updateRegisters();
+                    debugOutput.setText(memoryResult);
+                    PCField.setText(this.sim.registers.get("PC"));
+                    fieldMap.get("MFR").setText(this.sim.registers.get("MFR"));
                 }
             }else if(!MARField.getText().equals("") && MBRField.getText().equals("")){ //MAR filled in but MBR not filled in
                 debugOutput.setText("Must have a value in the MBR to Store to memory");
@@ -655,7 +658,7 @@ public class ComputerGUI extends Application {
             String num = "";
             if(!MARField.getText().equals("")){ //gpr text box filled in
                 int temp = Integer.parseInt(MARField.getText());
-                if(temp < 6 || temp > 2047){
+                if(temp < 0 || temp > 2047){
                     debugOutput.setText("Value is not valid.");
                 }else{
                     this.sim.setMAR(Integer.parseInt(MARField.getText()));
