@@ -711,7 +711,12 @@ public class Simulator {
             assert trapCode < 16: "TrapCode cannot be greater than 15";
             int nextPC = this.PC  + 1;
             this.memory.put(2, nextPC);
-            int addressOfTrap = this.getFromMemory(0) + trapCode; //mem location 0 contains address of trap table + trapCode index
+            int addressOfTrap = this.getFromMemory(0); 
+            if(addressOfTrap == -1){
+                return "ERROR: No address for Trap Table stored at address 0";
+            }
+            
+            addressOfTrap = addressOfTrap + trapCode; //mem location 0 contains address of trap table + trapCode index
             this.PC = addressOfTrap;
             int count = 0;
             HashMap<String, String> registerContents = null;
@@ -741,7 +746,7 @@ public class Simulator {
 
                 count ++;
             }
-        
+            return "ERROR: No RFS instruction at the end of TRAP";
         }
 
         //Load gpr register with value from memory
