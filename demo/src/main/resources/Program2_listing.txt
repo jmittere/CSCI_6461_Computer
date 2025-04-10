@@ -1,0 +1,338 @@
+                  LOC 900        ;SENTENCES
+001604   000151   Data 105 ; i
+001605   000040   Data 32   
+001606   000162   Data 114 ; r
+001607   000165   Data 117 ; u
+001610   000156   Data 110 ; n
+001611   000056   Data 46  ; .
+001612   000151   Data 105 ; i
+001613   000040   Data 32 
+001614   000145   Data 101 ; e
+001615   000141   Data 97  ; a
+001616   000164   Data 116 ; t
+001617   000056   Data 46  ; .
+001620   000151   Data 105 ; i
+001621   000040   Data 32  ;
+001622   000147   Data 103 ; g
+001623   000157   Data 111 ; o
+001624   000056   Data 46  ; .
+001625   000151   Data 105 ; i
+001626   000040   Data 32 
+001627   000141   Data 97  ; a 
+001630   000155   Data 109 ; m 
+001631   000056   Data 46  ; .
+001632   000151   Data 105 ; i
+001633   000040   Data 32 
+001634   000144   Data 100 ; d
+001635   000157   Data 111 ; o
+001636   000056   Data 46  ; .
+001637   000151   Data 105 ; i
+001640   000040   Data 32  
+001641   000164   Data 116 ; t
+001642   000162   Data 114 ; r
+001643   000171   Data 121 ; y
+001644   000056   Data 46  ; .
+                  LOC 8   ;GET USER INPUT WORD
+000010   000226   Data 150
+000011   102110   LDX 1,8  ; Load IXR1 with 100
+000012   003500   LDR 3,1,0 ;Load GPR3 with 100
+000013   142000   IN 0,0  ;Load GPR0 with character from user
+000014   004007   STR 0,0,7 ;Store character at 7
+000015   016037   SIR 0,31
+000016   016005   SIR 0,5  ;subtract 36 "$" character
+000017   022023   JNE 0,0,19  ;jump over nextinst if not $
+000020   002007   LDR 0,0,7 ;Load '$' character back into GPR0
+000021   004100   STR 0,1,0  ;Store the '$' character in IXR1 address to show where user word ends
+000022   026031   JMA 0,25 ; jump down out of loop to start searching for the word in the sentences
+000023   002007   LDR 0,0,7 ;@19 Load character back into GPR0
+000024   004100   STR 0,1,0  ;Store the character in IXR1 address
+000025   015401   AIR 3,1  ;Increment GPR3 by 1 
+000026   005412   STR 3,0,10 ;Store the location of where to put the next character in memory @ 8
+000027   102110   LDX 1,8 ;Load index reg with new location
+000030   026013   JMA 0,11  ;jump back to character input and beginning of loop again
+000031   000764   Data 500  ;@25 SETTING UP MEMORY and INDEX REGISTERS
+000032   102331   LDX 3,25 ;load IXR3 with location of variables in memory
+000033   000041   Data 33 
+000034   102233   LDX 2,27 ;@28 load IXR2 with location of else statement
+000035   000107   Data 71
+000036   102135   LDX 1,29 ;@30 load IXR1 with location of CHECKPERIODENDOFSENTENCE
+                  LOC 500
+000764   000001   Data 1 ;used for when a 1 is needed @ address 0 off of 500
+000765   000001   Data 1 ;sentenceNumberOfCurrentWord stored @ address 1 off of 500
+000766   000001   Data 1 ;wordNumberInSentence stored @ address 2 off of 500
+000767   000226   Data 150 ;startAddressOfUserCharacters @ address 3 off of 500
+000770   001604   Data 900 ;startAddressOfSentenceCharacters @ address 4 off of 500, will be overwritten if sentence word doesnt match
+000771   000226   Data 150 ;addressOfNextUserCharacter stored @ address 5 off of 500
+000772   001604   Data 900 ;addressOfNextSentenceCharacter stored @ address 6 off of 500
+000773   000001   Data 1 ;currentWordMatchFlag, 2 doesnt match, 1 matches @ address 7 off of 500
+000774   000454   Data 300 ;address of INCREMENT section stored @ address 8 off of 500 
+000775   000620   Data 400 ;address of PRINTOUT section stored @ address 9 off of 500
+000776   000012   Data 10 ;OFFSET1 stored @ address 10 off 500
+000777   000067   Data 55 ;CHECKPERIOD$ stored @ address 11 off 500
+001000   000053   Data 43 ;OFFSET3 stored @ address 12 off 500
+001001   000077   Data 63 ;INCREMENTSENTENCENUM stored @ address 13 off 500
+001002   000102   Data 66 ;NONPERIODELSE stored @ address 14 off 500
+001003   000111   Data 73 ;STARTOFMAINELSE stored @ address 15 off 500
+001004   000115   Data 77 ;SETCURRWORDMATCHFLAG stored @ address 16 off 500
+001005   000120   Data 80 ;CHECKSPACEENDOFSENTENCE stored @ address 17 off 500
+001006   000135   Data 93 ;CHECKPERIODENDOFSENTENCE stored @ address 18 off 500
+001007   000152   Data 106 ;LASTINCREMENT stored @ address 19 off 500
+                  LOC 31   ;MAIN LOGIC
+000037   002345   LDR 0,3,5,1 ;load nextUserCharacter into GPR0 with indirect bit
+000040   016037   SIR 0,31
+000041   016005   SIR 0,5
+000042   022357   JNE 0,3,15,1 ;@34,Jump to STARTOFMAINELSE @73, if GPR0 == 0 ; '$' char in user word,end of word
+000043   002346   LDR 0,3,6,1 ; load nextSentenceChar
+000044   016037   SIR 0,31
+000045   016001   SIR 0,1 ;subtract 32 to see if its a space
+000046   022353   JNE 0,3,11,1   ;@38,Jump to CHECKPERIOD$ @55, if nextSentenceChar is a space
+000047   002307   LDR 0,3,7  ;load currentWordMatchFlag to check if its 1
+000050   016001   SIR 0,1 
+000051   022314   JNE 0,3,12 ; jump to OFFSET3, if currentWordMatchFlag == 1
+000052   026351   JMA 3,9,1 ;jump to PRINTOUT, jump to address stored @ 9 off of 500
+000053   002302   LDR 0,3,2 ;@43,OFFSET3, load wordNumberInSentence
+000054   014001   AIR 0,1 ;increment wordNumberInSentence because we just saw a space
+000055   004302   STR 0,3,2 ;store wordNumberInSentence
+000056   002300   LDR 0,3,0 ;load 1 into GPR0, start of else
+000057   004307   STR 0,3,7 ;set currentWordMatchFlag to 1 because we have a period
+000060   002306   LDR 0,3,6 ; load addressOfNextSentenceCharacter 
+000061   014001   AIR 0,1 ;increment by 1 to skip to next
+000062   004304   STR 0,3,4 ; update startAddressOfSentenceCharacters
+000063   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000064   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000065   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000066   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000067   002346   LDR 0,3,6,1 ;@55,CHECKPERIOD$, load nextSentenceChar
+000070   016037   SIR 0,31 
+000071   016017   SIR 0,15 ;subtract 46 to see if its a period
+000072   022356   JNE 0,3,14,1 ;@58, jump to NONPERIODELSE @ 66, if nextSentenceChar is a '.'
+000073   002307   LDR 0,3,7  ;load currentWordMatchFlag to check if its 1
+000074   016001   SIR 0,1 
+000075   022355   JNE 0,3,13,1 ; jump to INCREMENTSENTENCENUM @63, if currentWordMatchFlag == 1
+000076   026351   JMA 3,9,1 ;jump to PRINTOUT, jump to address stored @ 9 off of 500
+000077   002301   LDR 0,3,1 ;@63,INCREMENTSENTENCENUM, load sentenceNumberOfCurrentWord
+000100   014001   AIR 0,1 ;increment sentenceNumberOfCurrentWord
+000101   004301   STR 0,3,1 ;store sentenceNumberOfCurrentWord
+000102   002300   LDR 0,3,0 ;@66,NONPERIODELSE, load 1 into GPR0
+000103   004307   STR 0,3,7 ;set currentWordMatchFlag to 1 because we have a period
+000104   004302   STR 0,3,2 ;set wordNumberInSentence to 1 in memory
+000105   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000106   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000107   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000110   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000111   002345   LDR 0,3,5,1 ;@73, STARTOFMAINELSE, load nextUserCharacter into GPR0 
+000112   012346   SMR 0,3,6,1 ;subtract nextSentenceChar from nextUserCharacter
+000113   022360   JNE 0,3,16,1 ; if equal jump to INCREMENT, but if nextUserCharacter != nextSentenceChar, jump to SETCURRWORDMATCHFLAG @ 77
+000114   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000115   002700   LDR 1,3,0 ;@77, SETCURRWORDMATCHFLAG, load 1 into GPR1
+000116   014401   AIR 1,1
+000117   004707   STR 1,3,7 ;set currentWordMatchFlag to 2 because they arent equal
+000120   002346   LDR 0,3,6,1 ;@80, CHECKSPACEENDOFSENTENCE, load nextSentenceChar
+000121   016037   SIR 0,31
+000122   016001   SIR 0,1 ;subtract 32 to see if its a space
+000123   022362   JNE 0,3,18,1 ;jump over next 9 instructions to CHECKPERIODENDOFSENTENCE @ 93 because not a space, if nextSentenceChar == " "
+000124   002302   LDR 0,3,2 ; load wordNumberInSentence
+000125   014001   AIR 0,1 ;increment wordNumberInSentence because we just saw a space
+000126   004302   STR 0,3,2 ;store wordNumberInSentence
+000127   002700   LDR 1,3,0 ;load 1 into GPR1
+000130   004707   STR 1,3,7 ;set currentWordMatchFlag to 1 because new word in sentence
+000131   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000132   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000133   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000134   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000135   002346   LDR 0,3,6,1 ;@93, CHECKPERIODENDOFSENTENCE, load nextSentenceChar
+000136   016037   SIR 0,31 
+000137   016017   SIR 0,15 ;subtract 46 to see if its a period
+000140   022363   JNE 0,3,19,1 ; skip next 9 inst to INCREMENT @ 106, if nextSentenceChar is a '.'
+000141   002301   LDR 0,3,1 ;load sentenceNumberOfCurrentWord
+000142   014001   AIR 0,1 ;increment sentenceNumberOfCurrentWord
+000143   004301   STR 0,3,1 ;store sentenceNumberOfCurrentWord because we have a period
+000144   002300   LDR 0,3,0 ;load 1 into GPR0
+000145   004302   STR 0,3,2 ;set wordNumberInSentence to 1 in memory
+000146   004307   STR 0,3,7 ;set currentWordMatchFlag to 1 because new sentence
+000147   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000150   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000151   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000152   026350   JMA 3,8,1 ;@106, LASTINCREMENT, jump to INCREMENT, jump to address stored @ 8 off of 500
+                  LOC 300     ;INCREMENT
+000454   002305   LDR 0,3,5 ;load address of nextUserCharacter
+000455   014001   AIR 0,1 ;add 1 to address for nextUserCharacter
+000456   004305   STR 0,3,5 ;store address of nextUserCharacter
+000457   002306   LDR 0,3,6 ;load address of nextSentenceChar
+000460   014001   AIR 0,1 ;add 1 to address for nextSentenceChar
+000461   004306   STR 0,3,6 ;store address of nextSentenceChar
+000462   026007   JMA 0,7 ;jump to top of loop
+                  LOC 400     ;PRINTOUT
+000620   002301   LDR 0,3,1 ;load sentenceNumberOfCurrentWord
+000621   144001   OUT 0,1   ;OUTPUT sentenceNumberOfCurrentWord
+000622   002302   LDR 0,3,2 ;load wordNumberInSentence
+000623   144001   OUT 0,1  ;OUTPUT wordNumberInSentence
+                  LOC 900        ;SENTENCES
+001604   000151   Data 105 ; i
+001605   000040   Data 32   
+001606   000162   Data 114 ; r
+001607   000165   Data 117 ; u
+001610   000156   Data 110 ; n
+001611   000056   Data 46  ; .
+001612   000151   Data 105 ; i
+001613   000040   Data 32 
+001614   000145   Data 101 ; e
+001615   000141   Data 97  ; a
+001616   000164   Data 116 ; t
+001617   000056   Data 46  ; .
+001620   000151   Data 105 ; i
+001621   000040   Data 32  ;
+001622   000147   Data 103 ; g
+001623   000157   Data 111 ; o
+001624   000056   Data 46  ; .
+001625   000151   Data 105 ; i
+001626   000040   Data 32 
+001627   000141   Data 97  ; a 
+001630   000155   Data 109 ; m 
+001631   000056   Data 46  ; .
+001632   000151   Data 105 ; i
+001633   000040   Data 32 
+001634   000144   Data 100 ; d
+001635   000157   Data 111 ; o
+001636   000056   Data 46  ; .
+001637   000151   Data 105 ; i
+001640   000040   Data 32  
+001641   000164   Data 116 ; t
+001642   000162   Data 114 ; r
+001643   000171   Data 121 ; y
+001644   000056   Data 46  ; .
+                  LOC 8   ;GET USER INPUT WORD
+000010   000226   Data 150
+000011   102110   LDX 1,8  ; Load IXR1 with 150
+000012   003410   LDR 3,0,8 ;Load GPR3 with 150
+000013   142000   IN 0,0  ;Load GPR0 with character from user
+000014   004007   STR 0,0,7 ;Store character at 7
+000015   016037   SIR 0,31
+000016   016005   SIR 0,5  ;subtract 36 "$" character
+000017   022023   JNE 0,0,19  ;jump over nextinst if not $
+000020   002007   LDR 0,0,7 ;Load '$' character back into GPR0
+000021   004100   STR 0,1,0  ;Store the '$' character in IXR1 address to show where user word ends
+000022   026031   JMA 0,25 ; jump down out of loop to start searching for the word in the sentences
+000023   002007   LDR 0,0,7 ;@19 Load character back into GPR0
+000024   004100   STR 0,1,0  ;Store the character in IXR1 address
+000025   015401   AIR 3,1  ;Increment GPR3 by 1 
+000026   005410   STR 3,0,8 ;Store the location of where to put the next character in memory @ 8
+000027   102110   LDX 1,8 ;Load index reg with new location
+000030   026013   JMA 0,11  ;jump back to character input and beginning of loop again
+000031   000764   Data 500  ;@25 SETTING UP MEMORY and INDEX REGISTERS
+000032   102331   LDX 3,25 ;load IXR3 with location of variables in memory
+000033   000041   Data 33 
+000034   102233   LDX 2,27 ;@28 load IXR2 with location of else statement
+000035   000107   Data 71
+000036   102135   LDX 1,29 ;@30 load IXR1 with location of CHECKPERIODENDOFSENTENCE
+                  LOC 500
+000764   000001   Data 1 ;used for when a 1 is needed @ address 0 off of 500
+000765   000001   Data 1 ;sentenceNumberOfCurrentWord stored @ address 1 off of 500
+000766   000001   Data 1 ;wordNumberInSentence stored @ address 2 off of 500
+000767   000226   Data 150 ;startAddressOfUserCharacters @ address 3 off of 500
+000770   001604   Data 900 ;startAddressOfSentenceCharacters @ address 4 off of 500, will be overwritten if sentence word doesnt match
+000771   000226   Data 150 ;addressOfNextUserCharacter stored @ address 5 off of 500
+000772   001604   Data 900 ;addressOfNextSentenceCharacter stored @ address 6 off of 500
+000773   000001   Data 1 ;currentWordMatchFlag, 2 doesnt match, 1 matches @ address 7 off of 500
+000774   000454   Data 300 ;address of INCREMENT section stored @ address 8 off of 500 
+000775   000620   Data 400 ;address of PRINTOUT section stored @ address 9 off of 500
+000776   000012   Data 10 ;OFFSET1 stored @ address 10 off 500
+000777   000067   Data 55 ;CHECKPERIOD$ stored @ address 11 off 500
+001000   000053   Data 43 ;OFFSET3 stored @ address 12 off 500
+001001   000077   Data 63 ;INCREMENTSENTENCENUM stored @ address 13 off 500
+001002   000102   Data 66 ;NONPERIODELSE stored @ address 14 off 500
+001003   000111   Data 73 ;STARTOFMAINELSE stored @ address 15 off 500
+001004   000115   Data 77 ;SETCURRWORDMATCHFLAG stored @ address 16 off 500
+001005   000120   Data 80 ;CHECKSPACEENDOFSENTENCE stored @ address 17 off 500
+001006   000135   Data 93 ;CHECKPERIODENDOFSENTENCE stored @ address 18 off 500
+001007   000152   Data 106 ;LASTINCREMENT stored @ address 19 off 500
+                  LOC 31   ;MAIN LOGIC
+000037   002345   LDR 0,3,5,1 ;load nextUserCharacter into GPR0 with indirect bit
+000040   016037   SIR 0,31
+000041   016005   SIR 0,5
+000042   022357   JNE 0,3,15,1 ;@34,Jump to STARTOFMAINELSE @73, if GPR0 == 0 ; '$' char in user word,end of word
+000043   002346   LDR 0,3,6,1 ; load nextSentenceChar
+000044   016037   SIR 0,31
+000045   016001   SIR 0,1 ;subtract 32 to see if its a space
+000046   022353   JNE 0,3,11,1   ;@38,Jump to CHECKPERIOD$ @55, if nextSentenceChar is a space
+000047   002307   LDR 0,3,7  ;load currentWordMatchFlag to check if its 1
+000050   016001   SIR 0,1 
+000051   022314   JNE 0,3,12 ; jump to OFFSET3, if currentWordMatchFlag == 1
+000052   026351   JMA 3,9,1 ;jump to PRINTOUT, jump to address stored @ 9 off of 500
+000053   002302   LDR 0,3,2 ;@43,OFFSET3, load wordNumberInSentence
+000054   014001   AIR 0,1 ;increment wordNumberInSentence because we just saw a space
+000055   004302   STR 0,3,2 ;store wordNumberInSentence
+000056   002300   LDR 0,3,0 ;load 1 into GPR0, start of else
+000057   004307   STR 0,3,7 ;set currentWordMatchFlag to 1 because we have a period
+000060   002306   LDR 0,3,6 ; load addressOfNextSentenceCharacter 
+000061   014001   AIR 0,1 ;increment by 1 to skip to next
+000062   004304   STR 0,3,4 ; update startAddressOfSentenceCharacters
+000063   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000064   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000065   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000066   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000067   002346   LDR 0,3,6,1 ;@55,CHECKPERIOD$, load nextSentenceChar
+000070   016037   SIR 0,31 
+000071   016017   SIR 0,15 ;subtract 46 to see if its a period
+000072   022356   JNE 0,3,14,1 ;@58, jump to NONPERIODELSE @ 66, if nextSentenceChar is a '.'
+000073   002307   LDR 0,3,7  ;load currentWordMatchFlag to check if its 1
+000074   016001   SIR 0,1 
+000075   022355   JNE 0,3,13,1 ; jump to INCREMENTSENTENCENUM @63, if currentWordMatchFlag == 1
+000076   026351   JMA 3,9,1 ;jump to PRINTOUT, jump to address stored @ 9 off of 500
+000077   002301   LDR 0,3,1 ;@63,INCREMENTSENTENCENUM, load sentenceNumberOfCurrentWord
+000100   014001   AIR 0,1 ;increment sentenceNumberOfCurrentWord
+000101   004301   STR 0,3,1 ;store sentenceNumberOfCurrentWord
+000102   002300   LDR 0,3,0 ;@66,NONPERIODELSE, load 1 into GPR0
+000103   004307   STR 0,3,7 ;set currentWordMatchFlag to 1 because we have a period
+000104   004302   STR 0,3,2 ;set wordNumberInSentence to 1 in memory
+000105   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000106   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000107   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000110   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000111   002345   LDR 0,3,5,1 ;@73, STARTOFMAINELSE, load nextUserCharacter into GPR0 
+000112   012346   SMR 0,3,6,1 ;subtract nextSentenceChar from nextUserCharacter
+000113   022360   JNE 0,3,16,1 ; if equal jump to INCREMENT, but if nextUserCharacter != nextSentenceChar, jump to SETCURRWORDMATCHFLAG @ 77
+000114   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000115   002700   LDR 1,3,0 ;@77, SETCURRWORDMATCHFLAG, load 1 into GPR1
+000116   014401   AIR 1,1
+000117   004707   STR 1,3,7 ;set currentWordMatchFlag to 2 because they arent equal
+000120   002346   LDR 0,3,6,1 ;@80, CHECKSPACEENDOFSENTENCE, load nextSentenceChar
+000121   016037   SIR 0,31
+000122   016001   SIR 0,1 ;subtract 32 to see if its a space
+000123   022362   JNE 0,3,18,1 ;jump over next 9 instructions to CHECKPERIODENDOFSENTENCE @ 93 because not a space, if nextSentenceChar == " "
+000124   002302   LDR 0,3,2 ; load wordNumberInSentence
+000125   014001   AIR 0,1 ;increment wordNumberInSentence because we just saw a space
+000126   004302   STR 0,3,2 ;store wordNumberInSentence
+000127   002700   LDR 1,3,0 ;load 1 into GPR1
+000130   004707   STR 1,3,7 ;set currentWordMatchFlag to 1 because new word in sentence
+000131   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000132   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000133   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000134   026350   JMA 3,8,1 ;jump to INCREMENT, jump to address stored @ 8 off of 500
+000135   002346   LDR 0,3,6,1 ;@93, CHECKPERIODENDOFSENTENCE, load nextSentenceChar
+000136   016037   SIR 0,31 
+000137   016017   SIR 0,15 ;subtract 46 to see if its a period
+000140   022363   JNE 0,3,19,1 ; skip next 9 inst to INCREMENT @ 106, if nextSentenceChar is a '.'
+000141   002301   LDR 0,3,1 ;load sentenceNumberOfCurrentWord
+000142   014001   AIR 0,1 ;increment sentenceNumberOfCurrentWord
+000143   004301   STR 0,3,1 ;store sentenceNumberOfCurrentWord because we have a period
+000144   002300   LDR 0,3,0 ;load 1 into GPR0
+000145   004302   STR 0,3,2 ;set wordNumberInSentence to 1 in memory
+000146   004307   STR 0,3,7 ;set currentWordMatchFlag to 1 because new sentence
+000147   002303   LDR 0,3,3 ; load startAddressOfUserCharacters
+000150   016001   SIR 0,1 ;subtract 1 so that when it is incremented, its the same
+000151   004305   STR 0,3,5 ;reset addressOfNextUserCharacter 
+000152   026350   JMA 3,8,1 ;@106, LASTINCREMENT, jump to INCREMENT, jump to address stored @ 8 off of 500
+                  LOC 300     ;INCREMENT
+000454   002305   LDR 0,3,5 ;load address of nextUserCharacter
+000455   014001   AIR 0,1 ;add 1 to address for nextUserCharacter
+000456   004305   STR 0,3,5 ;store address of nextUserCharacter
+000457   002306   LDR 0,3,6 ;load address of nextSentenceChar
+000460   014001   AIR 0,1 ;add 1 to address for nextSentenceChar
+000461   004306   STR 0,3,6 ;store address of nextSentenceChar
+000462   026007   JMA 0,7 ;jump to top of loop
+                  LOC 400     ;PRINTOUT
+000620   002301   LDR 0,3,1 ;load sentenceNumberOfCurrentWord
+000621   144001   OUT 0,1   ;OUTPUT sentenceNumberOfCurrentWord
+000622   002302   LDR 0,3,2 ;load wordNumberInSentence
+000623   144001   OUT 0,1  ;OUTPUT wordNumberInSentence

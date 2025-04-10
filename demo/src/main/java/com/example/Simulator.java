@@ -1329,28 +1329,28 @@ public class Simulator {
             int add = this.computeEffectiveAddress(ixr, indirect, address, false);
             switch (gpr) {
                 case 0: 
-                    if(this.GPR0 > 0){
+                    if(this.GPR0 != 0){
                         this.PC = add;
                         return "JNE: PC set with: " + this.PC;
                     }else{
                         return "JNE: GPR0" + this.GPR0 + " equals zero";
                     }
                 case 1: 
-                    if(this.GPR1 > 0){
+                    if(this.GPR1 != 0){
                         this.PC = add;
                         return "JNE: PC set with: " + this.PC;
                     }else{
                         return "JNE: GPR1" + this.GPR1 + " equals zero";
                     }
                 case 2: 
-                    if(this.GPR2 > 0){
+                    if(this.GPR2 != 0){
                         this.PC = add;
                         return "JNE: PC set with: " + this.PC;
                     }else{
                         return "JNE: GPR2" + this.GPR2 + " equals zero";
                     }
                 case 3: 
-                    if(this.GPR3 > 0){
+                    if(this.GPR3 != 0){
                         this.PC = add;
                         return "JNE: PC set with: " + this.PC;
                     }else{

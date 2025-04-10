@@ -39,7 +39,8 @@ public class ComputerGUI extends Application {
 
         Label titleLabel = new Label("  Computer System GUI");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        String hintLabel = "To set a register, you must delete the existing value in the text box."
+        String hintLabel = "For Program 2, when you have finished entering the characters for the word, enter '$' to stop inputting more characters and have the program search for that word in the sentence."
+        + "\nTo set a register, you must delete the existing value in the text box."
         + "\nTo load a value in memory into the MBR, set the MAR (using direct input in decimal in the MAR text box, or indirect input in the Octal or Binary text box) of the address of the value, then click Load."
         + "\nTo store a value in the MBR to memory, set the MAR (as specified above), then add a value to the MBR and click Store to store the value at the address of the MAR.";
         Label bottomLabel = new Label(hintLabel);
@@ -287,7 +288,20 @@ public class ComputerGUI extends Application {
                 String inputVal = consoleInput.getText();
                 int num = 0;
                 try {
-                    num = Integer.parseInt(inputVal);
+                    if(inputVal.length() == 1){
+                        char letter = inputVal.charAt(0);
+                        System.out.println("Letter: " + letter);
+                        if(Character.isDigit(letter)){
+                            num = Integer.parseInt(inputVal);
+                        }else if(letter == '$'){ //stop on this character
+                            num = 36;
+                        }else if(Character.isLetter(letter)){
+                            num = (int) letter; //ascii value
+                        }
+                    }else{
+                        num = Integer.parseInt(inputVal);
+                    }
+                    
                     //System.out.println("Converted number: " + number);
                 } catch (NumberFormatException numExc) {
                     System.out.println("Error: Invalid number format. Cannot convert to integer.");
