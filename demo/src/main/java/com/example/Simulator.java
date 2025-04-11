@@ -713,10 +713,14 @@ public class Simulator {
             this.memory.put(2, nextPC);
             int addressOfTrap = this.getFromMemory(0); 
             if(addressOfTrap == -1){
-                return "ERROR: No address for Trap Table stored at address 0";
+                return this.machineFault(1);
             }
             
             addressOfTrap = addressOfTrap + trapCode; //mem location 0 contains address of trap table + trapCode index
+            addressOfTrap = this.getFromMemory(addressOfTrap);
+            if(addressOfTrap == -1){
+                return "ERROR: No Trap instructions stored at " + addressOfTrap;
+            }
             this.PC = addressOfTrap;
             int count = 0;
             HashMap<String, String> registerContents = null;
@@ -1479,7 +1483,6 @@ public class Simulator {
             return "ERROR in OUT: GPR must be 0-3";
         }
 
-        //TODO: Figure out what this instruction does
         //Check device status from Register
         private String CHK(int gpr, int ixr, int indirect, int devid){
             if(devid!=1){
@@ -1487,19 +1490,19 @@ public class Simulator {
                 return "ERROR: Can only CHK to Console Printer";
             }
             if(gpr==0){ //print GPR0 to console printer
-                this.consolePrinter = Integer.toString(this.GPR0);
-                return "OUT: " + this.GPR0 + " printed to the console";
+                this.GPR0 = 1; //device not busy
+                return "CHK: " + this.GPR0 + " set to 1, device not busy";
             }else if(gpr==1){
-                this.consolePrinter = Integer.toString(this.GPR1);
-                return "OUT: " + this.GPR1 + " printed to the console";
+                this.GPR1 = 1; //device not busy
+                return "CHK: " + this.GPR1 + " set to 1, device not busy";
             }else if(gpr==2){
-                this.consolePrinter = Integer.toString(this.GPR2);
-                return "OUT: " + this.GPR2 + " printed to the console";
+                this.GPR2 = 1;
+                return "CHK: " + this.GPR2 + " set to 1, device not busy";
             }else if(gpr==3){
-                this.consolePrinter = Integer.toString(this.GPR3);
-                return "OUT: " + this.GPR3 + " printed to the console";
+                this.GPR3 = 1;
+                return "CHK: " + this.GPR3 + " set to 1, device not busy";
             }
-            return "ERROR in OUT: GPR must be 0-3";
+            return "ERROR in CHK: GPR must be 0-3";
         }
 
         //Shift and Rotate Operations

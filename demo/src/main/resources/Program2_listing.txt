@@ -77,7 +77,10 @@
 001005   000120   Data 80 ;CHECKSPACEENDOFSENTENCE stored @ address 17 off 500
 001006   000135   Data 93 ;CHECKPERIODENDOFSENTENCE stored @ address 18 off 500
 001007   000152   Data 106 ;LASTINCREMENT stored @ address 19 off 500
-                  LOC 31   ;MAIN LOGIC
+001010   000626   Data 406 ;TOPOFLOOPINPRINTOUT stored @ address 20 off 500
+001011   000634   Data 412 ;INCREMENTUSERCHARACTERINPRINTOUT stored @ address 21 off 500
+001012   000640   Data 416 ;FINALHLT stored @ address 22 off 500
+                  LOC 31   ;MAINLOGIC
 000037   002345   LDR 0,3,5,1 ;load nextUserCharacter into GPR0 with indirect bit
 000040   016037   SIR 0,31
 000041   016005   SIR 0,5
@@ -161,9 +164,22 @@
 000457   002306   LDR 0,3,6 ;load address of nextSentenceChar
 000460   014001   AIR 0,1 ;add 1 to address for nextSentenceChar
 000461   004306   STR 0,3,6 ;store address of nextSentenceChar
-000462   026007   JMA 0,7 ;jump to top of loop
+000462   026037   JMA 0,31 ;jump to MAINLOGIC
                   LOC 400     ;PRINTOUT
-000620   002301   LDR 0,3,1 ;load sentenceNumberOfCurrentWord
+000620   002301   LDR 0,3,1 ;@400, load sentenceNumberOfCurrentWord
 000621   144001   OUT 0,1   ;OUTPUT sentenceNumberOfCurrentWord
 000622   002302   LDR 0,3,2 ;load wordNumberInSentence
 000623   144001   OUT 0,1  ;OUTPUT wordNumberInSentence
+000624   002303   LDR 0,3,3 ;load startAddressOfUserCharacters
+000625   004305   STR 0,3,5 ;store for addressOfNextUserCharacter
+000626   002345   LDR 0,3,5,1 ;@406, TOPOFLOOPINPRINTOUT, use addressOfNextUserCharacter to load usercharacter
+000627   144001   OUT 0,1 ;output usercharacter
+000630   016037   SIR 0,31
+000631   016005   SIR 0,5 ;subtract 36 to see if its '$' character
+000632   022365   JNE 0,3,21,1  ;jump over next instruction to INCREMENTUSERCHARACTERINPRINTOUT @412 if no more characters to printout
+000633   026366   JMA 3,22,1 ;jump to FINALHLT 
+000634   002305   LDR 0,3,5 ;@412, INCREMENTUSERCHARACTERINPRINTOUT load addressOfNextUserCharacter
+000635   014001   AIR 0,1 
+000636   004305   STR 0,3,5 ;increment addressOfNextUserCharacter to next character for printout
+000637   026364   JMA 3,20,1 ;jump to TOPOFLOOPINPRINTOUT 
+000640   000000   HLT ;@416,FINALHLT

@@ -269,7 +269,7 @@ public class ComputerGUI extends Application {
             String pf = fieldMap.get("Program File").getText();
             System.out.println("Program File Path: " + pf);
             if(pf.equals("")){ //use hardcoded preloaded file
-                pf = "Program1_hard_20.txt"; 
+                pf = "Program2_load.txt"; 
             }
             this.sim.setProgramFile(pf);
             boolean successInitialization = this.sim.initializeProgram();
